@@ -47,13 +47,21 @@ contract LPOracle {
     /// @param price1 USD price of pool token 1.
     /// @return order Order required to satisfy pool's invariants given the input pricing vector.
     function _simulateOrder(uint256 price0, uint256 price1) internal view returns (GPv2Order.Data memory order) {
-        /* Setup prices vector */
-        uint256[] memory prices = new uint256[](2);
-        prices[0] = 1e18;
-        prices[1] = (price1 * (10 ** TOKEN0_DECIMALS) * 1e18) / (price0 * (10 ** TOKEN1_DECIMALS));
-
+        uint256[] memory prices = _normalizePrices(price0, price1);
         /* Simulate the order */
         (order,,,) = HELPER.order(POOL, prices);
+    }
+
+    /// @notice Normalizes input prices to the format expected by the pool helper
+    /// @dev First price is normalized to 1e18, second price is adjusted relative to first price
+    /// @dev Takes into account token decimals when calculating relative price
+    /// @param price0 price of pool token 0
+    /// @param price1 price of pool token 1
+    /// @return prices Array of normalized prices where prices[0] = 1e18 and prices[1] is the relative price
+    function _normalizePrices(uint256 price0, uint256 price1) internal view returns (uint256[] memory prices) {
+        prices = new uint256[](2);
+        prices[0] = 1e18;
+        prices[1] = (price1 * (10 ** TOKEN0_DECIMALS) * 1e18) / (price0 * (10 ** TOKEN1_DECIMALS));
     }
 
     /// @notice Adjusts input values according to decimals.
