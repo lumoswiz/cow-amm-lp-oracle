@@ -5,6 +5,8 @@ import { Test } from "forge-std/Test.sol";
 import { LPOracle } from "src/LPOracle.sol";
 
 contract ExposedLPOracle is LPOracle {
+    constructor(address _pool, address _helper) LPOracle(_pool, _helper) { }
+
     function exposed_adjustDecimals(
         uint256 value0,
         uint256 value1,
@@ -23,7 +25,21 @@ contract TestLPOracle is Test {
     ExposedLPOracle internal oracle;
 
     function setUp() public {
-        oracle = new ExposedLPOracle();
+        // Mock the helper.tokens() call
+        address mockHelper = address(1);
+        address mockPool = address(2);
+
+        // Create return data for tokens() call
+        address[] memory tokens = new address[](2);
+        tokens[0] = address(0x1111111111111111111111111111111111111111);
+        tokens[1] = address(0x2222222222222222222222222222222222222222);
+        // Mock the helper.tokens() call
+        vm.mockCall(mockHelper, abi.encodeWithSignature("tokens(address)", mockPool), abi.encode(tokens));
+
+        // Mock decimals() calls for both tokens
+        vm.mockCall(tokens[0], abi.encodeWithSignature("decimals()"), abi.encode(uint8(18)));
+        vm.mockCall(tokens[1], abi.encodeWithSignature("decimals()"), abi.encode(uint8(18)));
+        oracle = new ExposedLPOracle(mockPool, mockHelper);
     }
 
     function test_adjustDecimals_SameDecimals() public view {
