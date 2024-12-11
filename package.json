@@ -7,7 +7,7 @@
     "url": "https://github.com/lumoswiz"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^5.0.1"
+    "@balancer/cow-amm": "lumoswiz/cow-amm#main"
   },
   "devDependencies": {
     "forge-std": "github:foundry-rs/forge-std#v1.8.1",
