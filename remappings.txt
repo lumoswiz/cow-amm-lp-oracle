@@ -1,2 +1,6 @@
-@openzeppelin/contracts/=node_modules/@openzeppelin/contracts/
-forge-std/=node_modules/forge-std/
+forge-std/=node_modules/forge-std/src/
+cowprotocol/=node_modules/@cowprotocol/contracts/src/
+@cowprotocol/=node_modules/@cowprotocol/contracts/src/contracts/
+@balancer/cow-amm/=node_modules/@balancer/cow-amm/
+@cow-amm/=node_modules/cow-amm/src
+cow-amm/=node_modules/cow-amm/src/
