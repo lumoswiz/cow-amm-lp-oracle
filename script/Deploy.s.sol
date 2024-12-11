@@ -6,6 +6,7 @@ import { BaseScript } from "./Base.s.sol";
 /// @dev See the Solidity Scripting tutorial: https://book.getfoundry.sh/tutorials/solidity-scripting
 contract Deploy is BaseScript {
     function run() public broadcast {
+        // TODO: https://github.com/lumoswiz/cow-amm-lp-oracle/issues/6
         // oracle = new LPOracleFactory();
     }
 }
