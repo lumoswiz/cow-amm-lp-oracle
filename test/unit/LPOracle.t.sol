@@ -1,71 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity 0.8.25;
 
-import { console } from "forge-std/console.sol";
-import { Test } from "forge-std/Test.sol";
-import { LPOracle } from "src/LPOracle.sol";
-import { GPv2Order } from "cowprotocol/contracts/libraries/GPv2Order.sol";
-
-contract ExposedLPOracle is LPOracle {
-    constructor(address _pool, address _helper) LPOracle(_pool, _helper) { }
-
-    function exposed_simulateOrder(uint256 price0, uint256 price1) external view returns (GPv2Order.Data memory) {
-        return _simulateOrder(price0, price1);
-    }
-
-    function exposed_normalizePrices(uint256 price0, uint256 price1) external view returns (uint256[] memory) {
-        return _normalizePrices(price0, price1);
-    }
-
-    function exposed_adjustDecimals(
-        uint256 value0,
-        uint256 value1,
-        uint8 decimals0,
-        uint8 decimals1
-    )
-        external
-        pure
-        returns (uint256 adjusted0, uint256 adjusted1)
-    {
-        return _adjustDecimals(value0, value1, decimals0, decimals1);
-    }
-}
-
-abstract contract BaseTest is Test {
-    address internal constant MOCK_HELPER = address(1);
-    address internal constant MOCK_POOL = address(2);
-    address internal constant TOKEN0 = address(0x1111111111111111111111111111111111111111);
-    address internal constant TOKEN1 = address(0x2222222222222222222222222222222222222222);
-
-    ExposedLPOracle internal oracle;
-
-    function setUp() public virtual {
-        // Setup default token configuration with 18 decimals
-        setTokenDecimals(18, 18);
-        // Initialize oracle with default configuration
-        oracle = new ExposedLPOracle(MOCK_POOL, MOCK_HELPER);
-    }
-
-    function setTokenDecimals(uint8 decimals0, uint8 decimals1) internal {
-        // Setup token addresses
-        address[] memory tokens = new address[](2);
-        tokens[0] = TOKEN0;
-        tokens[1] = TOKEN1;
-
-        // Mock helper.tokens() call
-        vm.mockCall(MOCK_HELPER, abi.encodeWithSignature("tokens(address)", MOCK_POOL), abi.encode(tokens));
-
-        // Mock decimals() calls for both tokens
-        vm.mockCall(TOKEN0, abi.encodeWithSignature("decimals()"), abi.encode(decimals0));
-        vm.mockCall(TOKEN1, abi.encodeWithSignature("decimals()"), abi.encode(decimals1));
-    }
-
-    // Helper to reinitialize oracle after changing decimals
-    function reinitOracle(uint8 decimals0, uint8 decimals1) internal {
-        setTokenDecimals(decimals0, decimals1);
-        oracle = new ExposedLPOracle(MOCK_POOL, MOCK_HELPER);
-    }
-}
+import { BaseTest } from "test/Base.t.sol";
 
 contract TestLPOracle is BaseTest {
     function test_adjustDecimals_SameDecimals() public view {
@@ -192,14 +128,14 @@ contract TestLPOracle is BaseTest {
         assertEq(prices[1], 0, "Second price should be 0");
     }
 
-    function testFuzz_normalizePrices(uint256 price0, uint256 price1) public view {
+    function testFuzz_normalizePrices(uint256 price0, uint256 price1) public {
         // Bound inputs to within 18 decimal places apart.
         price0 = bound(price0, 1e6, 1e24);
         price1 = bound(price1, 1e6, 1e24);
 
         // Add debug logs to verify bounds
-        console.log("price0", price0);
-        console.log("price1", price1);
+        emit log_named_uint("price0", price0);
+        emit log_named_uint("price1", price1);
 
         uint256[] memory prices = oracle.exposed_normalizePrices(price0, price1);
 
