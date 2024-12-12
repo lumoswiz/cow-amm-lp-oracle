@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.25;
+pragma solidity >=0.8.25 < 0.9.0;
 
-import { Test } from "forge-std/Test.sol";
+import { Utils } from "test/utils/Utils.sol";
 import { ExposedLPOracle } from "test/harness/ExposedLPOracle.sol";
 
-abstract contract BaseTest is Test {
+contract BaseTest is Utils {
     address internal constant MOCK_HELPER = address(1);
     address internal constant MOCK_POOL = address(2);
     address internal constant TOKEN0 = address(0x1111111111111111111111111111111111111111);
@@ -22,13 +22,8 @@ abstract contract BaseTest is Test {
     }
 
     function setTokenDecimals(uint8 decimals0, uint8 decimals1) internal {
-        // Setup token addresses
-        address[] memory tokens = new address[](2);
-        tokens[0] = TOKEN0;
-        tokens[1] = TOKEN1;
-
         // Mock helper.tokens() call
-        vm.mockCall(MOCK_HELPER, abi.encodeWithSignature("tokens(address)", MOCK_POOL), abi.encode(tokens));
+        mock_call_tokens(MOCK_HELPER, MOCK_POOL, TOKEN0, TOKEN1);
 
         // Mock decimals() calls for both tokens
         vm.mockCall(TOKEN0, abi.encodeWithSignature("decimals()"), abi.encode(decimals0));
