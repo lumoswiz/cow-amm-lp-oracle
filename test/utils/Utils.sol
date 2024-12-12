@@ -1,10 +1,18 @@
-// SPDX-License-Identifier: GPL-3.0
+// SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity >=0.8.25 < 0.9.0;
 
 import { Test } from "forge-std/Test.sol";
 import { OrderParams } from "test/utils/Types.sol";
 
 contract Utils is Test {
+    /*----------------------------------------------------------*|
+    |*  # MOCK CALLS: SHARED                                    *|
+    |*----------------------------------------------------------*/
+
+    function mock_address_decimals(address addr, uint8 decimals) internal {
+        vm.mockCall(addr, abi.encodeWithSignature("decimals()"), abi.encode(decimals));
+    }
+
     /*----------------------------------------------------------*|
     |*  # MOCK CALLS: ERC20                                     *|
     |*----------------------------------------------------------*/

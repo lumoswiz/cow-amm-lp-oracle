@@ -12,7 +12,7 @@ import { IERC20 } from "cowprotocol/contracts/interfaces/IERC20.sol";
 import { IBCoWFactory } from "@balancer/cow-amm/src/interfaces/IBCoWFactory.sol";
 import { IBCoWPool } from "@balancer/cow-amm/src/interfaces/IBCoWPool.sol";
 
-/// @dev Adapted from BCoWHelper modified to expose `order` functionality without _prepareSettlement
+/// @dev Adapted from BCoWHelper modified to expose `order` without _prepareSettlement
 contract MockBCoWHelper is ICOWAMMPoolHelper, BMath, BCoWConst {
     /**
      * @dev Collection of pool information on a specific token
@@ -233,6 +233,7 @@ contract MockBCoWHelper is ICOWAMMPoolHelper, BMath, BCoWConst {
         uint256 normalizedWeight = pool.getNormalizedWeight(address(token));
         uint256 denormalizedWeight = pool.getDenormalizedWeight(address(token));
         return
-            Reserves({ token: token, balance: balance, denormWeight: denormalizedWeight, normWeight: normalizedWeight });
+        // solhint-disable-next-line max-line-length
+        Reserves({ token: token, balance: balance, denormWeight: denormalizedWeight, normWeight: normalizedWeight });
     }
 }
