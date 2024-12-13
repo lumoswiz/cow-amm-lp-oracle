@@ -42,7 +42,7 @@ contract LPOracle {
     /// @param _feed0 Chainlink USD price feed for pool token at index 0.
     /// @param _feed1 Chainlink USD price feed for pool token at index 1.
     constructor(address _pool, address _helper, address _feed0, address _feed1) {
-        /* Set price feeds & revert if feeds have greater than 18 decimals*/
+        /* Set price feeds & revert if feeds have greater than 18 decimals */
         FEED0 = AggregatorV3Interface(_feed0);
         FEED1 = AggregatorV3Interface(_feed1);
         if (FEED0.decimals() > 18 || FEED1.decimals() > 18) revert UnsupportedDecimals();

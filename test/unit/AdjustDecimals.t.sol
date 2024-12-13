@@ -79,8 +79,8 @@ contract AdjustDecimals_Unit_Test is BaseTest {
         view
     {
         // Bound decimals to valid ranges
-        decimals0 = uint8(bound(decimals0, 0, 18));
-        decimals1 = uint8(bound(decimals1, 0, 18));
+        decimals0 = boundUint8(decimals0, 0, 18);
+        decimals1 = boundUint8(decimals1, 0, 18);
 
         // Bound values to prevent overflow
         value0 = bound(value0, 0, type(uint256).max / (10 ** 18));
