@@ -7,4 +7,5 @@ contract Defaults {
     uint256 internal constant NORMALIZED_WEIGHT = 0.5e18;
     uint256 internal constant DENORMALIZED_WEIGHT = 1e18;
     bytes32 internal constant APP_DATA = keccak256("APP_DATA");
+    uint256 internal constant DEC_1_2024 = 1_733_011_200;
 }

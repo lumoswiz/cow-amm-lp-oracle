@@ -24,6 +24,14 @@ contract Utils is Test {
     }
 
     /*----------------------------------------------------------*|
+    |*  # MOCK CALLS: AggregatorV3Interface                     *|
+    |*----------------------------------------------------------*/
+
+    function mock_feed_latestRoundData(address feed, int256 answer, uint256 updatedAt) internal {
+        vm.mockCall(feed, abi.encodeWithSignature("latestRoundData()"), abi.encode(0, answer, 0, updatedAt, 0));
+    }
+
+    /*----------------------------------------------------------*|
     |*  # MOCK CALLS: ERC20                                     *|
     |*----------------------------------------------------------*/
 

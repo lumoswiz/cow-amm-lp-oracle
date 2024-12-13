@@ -6,7 +6,7 @@ import { MockBCoWHelper } from "test/mocks/MockBCoWHelper.sol";
 
 import { Assertions } from "test/utils/Assertions.sol";
 import { Defaults } from "test/utils/Defaults.sol";
-import { OrderParams, TokenParams } from "test/utils/Types.sol";
+import { OrderParams, TokenParams, FeedParams } from "test/utils/Types.sol";
 import { Utils } from "test/utils/Utils.sol";
 
 contract BaseTest is Assertions, Defaults, Utils {
@@ -92,5 +92,12 @@ contract BaseTest is Assertions, Defaults, Utils {
         });
 
         mock_helper_order(params);
+    }
+
+    /// @dev Helper to mock price feed data for both feeds - decimals, latestRoundData
+    function setPriceFeedData(FeedParams memory params0, FeedParams memory params1) internal {
+        setFeedDecimals(params0.decimals, params1.decimals);
+        mock_feed_latestRoundData(params0.addr, params0.answer, params0.updatedAt);
+        mock_feed_latestRoundData(params1.addr, params1.answer, params1.updatedAt);
     }
 }

@@ -14,3 +14,10 @@ struct OrderParams {
     TokenParams token0;
     TokenParams token1;
 }
+
+struct FeedParams {
+    address addr;
+    uint8 decimals;
+    int256 answer;
+    uint256 updatedAt;
+}
