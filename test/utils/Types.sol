@@ -13,5 +13,4 @@ struct OrderParams {
     address factory;
     TokenParams token0;
     TokenParams token1;
-    bytes32 domainSeparator;
 }
