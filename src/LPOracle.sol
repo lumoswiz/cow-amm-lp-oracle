@@ -60,6 +60,22 @@ contract LPOracle {
         TOKEN1_DECIMALS = TOKEN1.decimals();
     }
 
+    /// @notice Retrieves latest price data from Chainlink feeds and adjusts for decimals.
+    /// @return price0 USD price of token 0.
+    /// @return price1 USD price of token1.
+    /// @return updatedAt The timestamp of the feed with the oldest price udpate.
+    function _getFeedData() internal view returns (uint256 price0, uint256 price1, uint256 updatedAt) {
+        /* Get latestRoundData from price feeds */
+        (, int256 answer0,, uint256 updatedAt0,) = FEED0.latestRoundData();
+        (, int256 answer1,, uint256 updatedAt1,) = FEED1.latestRoundData();
+
+        /* Adjust answers for price feed decimals */
+        (price0, price1) = _adjustDecimals(uint256(answer0), uint256(answer1), FEED0.decimals(), FEED1.decimals());
+
+        /* Set update timestamp of oldest price feed */
+        updatedAt = updatedAt0 < updatedAt1 ? updatedAt0 : updatedAt1;
+    }
+
     /// @notice Retrieves the order to satisfy the pool's invariants given the token prices.
     /// @dev Zero fee constant function AMM.
     /// @dev Decimals for price0 and price1 should be identical.
