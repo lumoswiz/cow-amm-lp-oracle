@@ -14,7 +14,7 @@ contract ExposedLPOracle is LPOracle {
         LPOracle(_pool, _helper, _feed0, _feed1)
     { }
 
-    function exposed__getFeedData() external view returns (uint256 price0, uint256 price1, uint256 updatedAt) {
+    function exposed_getFeedData() external view returns (uint256 price0, uint256 price1, uint256 updatedAt) {
         return _getFeedData();
     }
 
@@ -24,6 +24,10 @@ contract ExposedLPOracle is LPOracle {
 
     function exposed_normalizePrices(uint256 price0, uint256 price1) external view returns (uint256[] memory) {
         return _normalizePrices(price0, price1);
+    }
+
+    function exposed_simulatePoolReserves(GPv2Order.Data memory order) external view returns (uint256, uint256) {
+        return _simulatePoolReserves(order);
     }
 
     function exposed_adjustDecimals(

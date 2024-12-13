@@ -14,7 +14,7 @@ contract GetFeedData_Unit_Test is BaseTest {
 
         setPriceFeedData(params0, params1);
 
-        (,, uint256 updatedAt) = oracle.exposed__getFeedData();
+        (,, uint256 updatedAt) = oracle.exposed_getFeedData();
 
         assertEq(updatedAt, feed0UpdatedAt, "updatedAt");
     }
@@ -28,7 +28,7 @@ contract GetFeedData_Unit_Test is BaseTest {
 
         setPriceFeedData(params0, params1);
 
-        (,, uint256 updatedAt) = oracle.exposed__getFeedData();
+        (,, uint256 updatedAt) = oracle.exposed_getFeedData();
 
         assertEq(updatedAt, feed1UpdatedAt, "updatedAt");
     }
@@ -54,7 +54,7 @@ contract GetFeedData_Unit_Test is BaseTest {
 
         setPriceFeedData(params0, params1);
 
-        (uint256 price0, uint256 price1, uint256 updatedAt) = oracle.exposed__getFeedData();
+        (uint256 price0, uint256 price1, uint256 updatedAt) = oracle.exposed_getFeedData();
 
         assertGt(price0, type(uint128).max, "price0 > MAX_UINT128");
         assertEq(price1, uint256(answer1), "price1 == uint256(answer1)");
@@ -73,7 +73,7 @@ contract GetFeedData_Unit_Test is BaseTest {
 
         setPriceFeedData(params0, params1);
 
-        (uint256 price0, uint256 price1, uint256 updatedAt) = oracle.exposed__getFeedData();
+        (uint256 price0, uint256 price1, uint256 updatedAt) = oracle.exposed_getFeedData();
 
         assertGt(price1, type(uint128).max, "price1 > MAX_UINT128");
         assertEq(price0, uint256(answer0), "price0 == uint256(answer0)");
@@ -95,7 +95,7 @@ contract GetFeedData_Unit_Test is BaseTest {
 
         setPriceFeedData(params0, params1);
 
-        (uint256 price0, uint256 price1, uint256 updatedAt) = oracle.exposed__getFeedData();
+        (uint256 price0, uint256 price1, uint256 updatedAt) = oracle.exposed_getFeedData();
 
         assertEq(int256(price0), answer0);
     }
