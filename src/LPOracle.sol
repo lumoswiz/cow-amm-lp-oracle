@@ -2,19 +2,26 @@
 pragma solidity 0.8.25;
 
 import { ICOWAMMPoolHelper } from "@cow-amm/interfaces/ICOWAMMPoolHelper.sol";
-import { GPv2Order } from "cowprotocol/contracts/libraries/GPv2Order.sol";
+import { AggregatorV3Interface } from "@cow-amm/interfaces/AggregatorV3Interface.sol";
 import { IERC20 } from "cowprotocol/contracts/interfaces/IERC20.sol";
+import { GPv2Order } from "cowprotocol/contracts/libraries/GPv2Order.sol";
 
 contract LPOracle {
+    /// @notice Thrown when Chainlink price feeds with more than 18 decimals are used.
+    error UnsupportedDecimals();
+
     /// @notice BCoWPool address.
     address public immutable POOL;
+
     /// @notice BCoWHelper contract.
     ICOWAMMPoolHelper public immutable HELPER;
 
-    /// @notice Pool tokens.
-    /// @dev Tokens at indicies 0 and 1 in `getFinalTokens` function. Use same order for input prices vector to `order`
-    /// function.
+    /// @notice Pool token 0.
+    /// @dev Token at index 0 from `pool.getFinalTokens` call.
     IERC20 public immutable TOKEN0;
+
+    /// @notice Pool token 1.
+    /// @dev Token at index 1 from `pool.getFinalTokens` call.
     IERC20 public immutable TOKEN1;
 
     /// @notice Pool token 0 decimals
@@ -23,10 +30,23 @@ contract LPOracle {
     /// @notice Pool token 1 decimals
     uint256 public immutable TOKEN1_DECIMALS;
 
+    /// @notice Chainlink USD price for pool token 0
+    AggregatorV3Interface public immutable FEED0;
+
+    /// @notice Chainlink USD price for pool token 1
+    AggregatorV3Interface public immutable FEED1;
+
     /// @dev Must check Chainlink price feeds match pool token ordering.
     /// @param _pool BCoWPool address.
     /// @param _helper BCoWHelper address.
-    constructor(address _pool, address _helper) {
+    /// @param _feed0 Chainlink USD price feed for pool token at index 0.
+    /// @param _feed1 Chainlink USD price feed for pool token at index 1.
+    constructor(address _pool, address _helper, address _feed0, address _feed1) {
+        /* Set price feeds & revert if feeds have greater than 18 decimals */
+        FEED0 = AggregatorV3Interface(_feed0);
+        FEED1 = AggregatorV3Interface(_feed1);
+        if (FEED0.decimals() > 18 || FEED1.decimals() > 18) revert UnsupportedDecimals();
+
         /* Set pool and helper contracts */
         POOL = _pool;
         HELPER = ICOWAMMPoolHelper(_helper);
@@ -38,6 +58,22 @@ contract LPOracle {
 
         TOKEN0_DECIMALS = TOKEN0.decimals();
         TOKEN1_DECIMALS = TOKEN1.decimals();
+    }
+
+    /// @notice Retrieves latest price data from Chainlink feeds and adjusts for decimals.
+    /// @return price0 USD price of token 0.
+    /// @return price1 USD price of token1.
+    /// @return updatedAt The timestamp of the feed with the oldest price udpate.
+    function _getFeedData() internal view returns (uint256 price0, uint256 price1, uint256 updatedAt) {
+        /* Get latestRoundData from price feeds */
+        (, int256 answer0,, uint256 updatedAt0,) = FEED0.latestRoundData();
+        (, int256 answer1,, uint256 updatedAt1,) = FEED1.latestRoundData();
+
+        /* Adjust answers for price feed decimals */
+        (price0, price1) = _adjustDecimals(uint256(answer0), uint256(answer1), FEED0.decimals(), FEED1.decimals());
+
+        /* Set update timestamp of oldest price feed */
+        updatedAt = updatedAt0 < updatedAt1 ? updatedAt0 : updatedAt1;
     }
 
     /// @notice Retrieves the order to satisfy the pool's invariants given the token prices.

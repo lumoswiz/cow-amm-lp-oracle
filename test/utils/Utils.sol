@@ -6,17 +6,36 @@ import { OrderParams } from "test/utils/Types.sol";
 
 contract Utils is Test {
     /*----------------------------------------------------------*|
+    |*  # BOUNDS                                                *|
+    |*----------------------------------------------------------*/
+
+    /// @dev Helper to bound uint8 values for fuzz testing.
+    function boundUint8(uint8 x, uint8 min, uint8 max) internal pure returns (uint8) {
+        return uint8(bound(x, min, max));
+    }
+
+    /*----------------------------------------------------------*|
     |*  # MOCK CALLS: SHARED                                    *|
     |*----------------------------------------------------------*/
 
+    /// @dev Helper to mock a `decimals()` call to an arbitrary address.
     function mock_address_decimals(address addr, uint8 decimals) internal {
         vm.mockCall(addr, abi.encodeWithSignature("decimals()"), abi.encode(decimals));
+    }
+
+    /*----------------------------------------------------------*|
+    |*  # MOCK CALLS: AggregatorV3Interface                     *|
+    |*----------------------------------------------------------*/
+
+    function mock_feed_latestRoundData(address feed, int256 answer, uint256 updatedAt) internal {
+        vm.mockCall(feed, abi.encodeWithSignature("latestRoundData()"), abi.encode(0, answer, 0, updatedAt, 0));
     }
 
     /*----------------------------------------------------------*|
     |*  # MOCK CALLS: ERC20                                     *|
     |*----------------------------------------------------------*/
 
+    /// @dev Helper to mock token pool balances.
     function mock_token_balanceOf(address token, address pool, uint256 balance) internal {
         vm.mockCall(token, abi.encodeWithSignature("balanceOf(address)", pool), abi.encode(balance));
     }
@@ -25,14 +44,17 @@ contract Utils is Test {
     |*  # MOCK CALLS: BCoWPool                                 *|
     |*----------------------------------------------------------*/
 
+    /// @dev Helper to mock the normalized weight of a pool token.
     function mock_pool_getNormalizedWeight(address pool, address token, uint256 normWeight) internal {
         vm.mockCall(pool, abi.encodeWithSignature("getNormalizedWeight(address)", token), abi.encode(normWeight));
     }
 
+    /// @dev Helper to mock the denormalized weight of a pool token.
     function mock_pool_getDenormalizedWeight(address pool, address token, uint256 denormWeight) internal {
         vm.mockCall(pool, abi.encodeWithSignature("getDenormalizedWeight(address)", token), abi.encode(denormWeight));
     }
 
+    /// @dev Helper to mock the `pool.getFinalTokens` call.
     function mock_pool_getFinalTokens(address pool, address token0, address token1) internal {
         address[] memory tokens = new address[](2);
         tokens[0] = token0;
@@ -41,6 +63,7 @@ contract Utils is Test {
         vm.mockCall(pool, abi.encodeWithSignature("getFinalTokens()"), abi.encode(tokens));
     }
 
+    /// @dev Helper to set the pool state as finalized, required for LPOracle._simulateOrder calls.
     function mock_pool__finalized(address pool) internal {
         vm.mockCall(pool, abi.encodeWithSignature("_finalized()"), abi.encode(true));
     }
@@ -48,6 +71,8 @@ contract Utils is Test {
     /*----------------------------------------------------------*|
     |*  # MOCK CALLS: BCoWHelper                                *|
     |*----------------------------------------------------------*/
+
+    /// @dev Helper to mock the tokens array in BCoWHelper.
     function mock_helper_tokens(address helper, address pool, address token0, address token1) internal {
         // Setup token addresses
         address[] memory tokens = new address[](2);
@@ -58,6 +83,7 @@ contract Utils is Test {
         vm.mockCall(helper, abi.encodeWithSignature("tokens(address)", pool), abi.encode(tokens));
     }
 
+    /// @dev Helper to mock the BCoWHelper._reserves call.
     function mock_helper_reserves(
         address pool,
         address token,
@@ -72,6 +98,7 @@ contract Utils is Test {
         mock_pool_getDenormalizedWeight(pool, token, denormWeight);
     }
 
+    /// @dev Helper to aggregate all mock calls requried for the BCoWHelper.order call in LPOracle._simulateOrder.
     function mock_helper_order(OrderParams memory params) internal {
         // Mock BCoWFactory.isBPool
         mock_factory_isBPool(params.factory, params.pool);
@@ -94,10 +121,12 @@ contract Utils is Test {
     |*  # MOCK CALLS: BCoWFactory                               *|
     |*----------------------------------------------------------*/
 
+    /// @dev Helper to mock the `APP_DATA` in the factory contract, required to deploy MockBCoWHelper.
     function mock_factory_APP_DATA(address factory, bytes32 data) internal {
         vm.mockCall(factory, abi.encodeWithSignature("APP_DATA()"), abi.encode(data));
     }
 
+    /// @dev Helper to mock the factory.isBPool call, required to mock the order.
     function mock_factory_isBPool(address factory, address pool) internal {
         vm.mockCall(factory, abi.encodeWithSignature("isBPool(address)", pool), abi.encode(true));
     }

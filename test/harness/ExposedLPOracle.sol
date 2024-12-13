@@ -5,7 +5,18 @@ import { LPOracle } from "src/LPOracle.sol";
 import { GPv2Order } from "cowprotocol/contracts/libraries/GPv2Order.sol";
 
 contract ExposedLPOracle is LPOracle {
-    constructor(address _pool, address _helper) LPOracle(_pool, _helper) { }
+    constructor(
+        address _pool,
+        address _helper,
+        address _feed0,
+        address _feed1
+    )
+        LPOracle(_pool, _helper, _feed0, _feed1)
+    { }
+
+    function exposed__getFeedData() external view returns (uint256 price0, uint256 price1, uint256 updatedAt) {
+        return _getFeedData();
+    }
 
     function exposed_simulateOrder(uint256 price0, uint256 price1) external view returns (GPv2Order.Data memory) {
         return _simulateOrder(price0, price1);
