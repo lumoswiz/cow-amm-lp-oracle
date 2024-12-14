@@ -3,6 +3,7 @@ pragma solidity >=0.8.25 < 0.9.0;
 
 import { Test } from "forge-std/Test.sol";
 import { OrderParams } from "test/utils/Types.sol";
+import { GPv2Order } from "cowprotocol/contracts/libraries/GPv2Order.sol";
 
 contract Utils is Test {
     /*----------------------------------------------------------*|
