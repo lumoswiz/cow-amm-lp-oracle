@@ -15,6 +15,16 @@ contract SimulatePoolReserves_Unit_Test is BaseTest {
         assertEq(token1Bal, TOKEN1_BALANCE);
     }
 
+    function test_SimulatePoolReserves_Balanced80_20Pool() external {
+        uint256 token0PoolReserve = 80e18;
+        uint256 token1PoolReserve = 20e18;
+        setMockOrder(token0PoolReserve, token1PoolReserve, 0.8e18);
+        GPv2Order.Data memory order = oracle.exposed_simulateOrder(1e8, 1e8);
+        (uint256 token0Bal, uint256 token1Bal) = oracle.exposed_simulatePoolReserves(order);
+        assertEq(token0Bal, token0PoolReserve);
+        assertEq(token1Bal, token1PoolReserve);
+    }
+
     function test_SimulatePoolReserves_tooMuchToken0() external {
         // This test is analogous to an imbalanced ETH/USDC pool with ETH at 3000 and USDC at 1.
         // The pool has too much ETH! (10% imbalance)
