@@ -68,6 +68,11 @@ contract Utils is Test {
         vm.mockCall(pool, abi.encodeWithSignature("_finalized()"), abi.encode(true));
     }
 
+    /// @dev Helper to mock total supply of pool LP tokens
+    function mock_pool_totalSupply(address pool, uint256 supply) internal {
+        vm.mockCall(pool, abi.encodeWithSignature("totalSupply()"), abi.encode(supply));
+    }
+
     /*----------------------------------------------------------*|
     |*  # MOCK CALLS: BCoWHelper                                *|
     |*----------------------------------------------------------*/
