@@ -100,6 +100,33 @@ contract LPOracle {
         prices[1] = (price1 * (10 ** TOKEN0_DECIMALS) * 1e18) / (price0 * (10 ** TOKEN1_DECIMALS));
     }
 
+    /// @notice Retrieves the simulated pool reserves post rebalancing trade.
+    /// @dev Adjusts the reserve balances for decimal differences to prepare for LP token price computation.
+    /// @param order The simulated rebalancing trade order.
+    /// @return token0Bal Simulated pool balance of token 0.
+    /// @return token1Bal Simulated pool balance of token 1.
+    function _simulatePoolReserves(GPv2Order.Data memory order)
+        internal
+        view
+        returns (uint256 token0Bal, uint256 token1Bal)
+    {
+        /* Get current pool token balances */
+        uint256 balance0 = TOKEN0.balanceOf(POOL);
+        uint256 balance1 = TOKEN1.balanceOf(POOL);
+
+        /* Determine post rebalancing trade pool token balances */
+        if (TOKEN0 == order.buyToken) {
+            balance0 += order.buyAmount;
+            balance1 -= order.sellAmount;
+        } else {
+            balance0 -= order.sellAmount;
+            balance1 += order.buyAmount;
+        }
+
+        /* Adjust for decimals */
+        (token0Bal, token1Bal) = _adjustDecimals(balance0, balance1, TOKEN0_DECIMALS, TOKEN1_DECIMALS);
+    }
+
     /// @notice Adjusts input values according to decimals.
     /// @dev Used to adjust pool reserve balances and price feed answers.
     /// @param value0 Value associated with pool token 0.

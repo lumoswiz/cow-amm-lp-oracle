@@ -73,20 +73,20 @@ contract BaseTest is Assertions, Defaults, Utils {
     }
 
     // Todo: implement input args for pool. tokens, balances, etc.
-    function setMockOrder() internal {
+    function setMockOrder(uint256 token0Balance, uint256 token1Balance, uint256 token0Weight) internal {
         OrderParams memory params = OrderParams({
             pool: MOCK_POOL,
             factory: MOCK_FACTORY,
             token0: TokenParams({
                 addr: TOKEN0,
-                balance: TOKEN0_BALANCE,
-                normWeight: NORMALIZED_WEIGHT,
+                balance: token0Balance,
+                normWeight: token0Weight,
                 denormWeight: DENORMALIZED_WEIGHT
             }),
             token1: TokenParams({
                 addr: TOKEN1,
-                balance: TOKEN1_BALANCE,
-                normWeight: NORMALIZED_WEIGHT,
+                balance: token1Balance,
+                normWeight: BONE - token0Weight,
                 denormWeight: DENORMALIZED_WEIGHT
             })
         });
