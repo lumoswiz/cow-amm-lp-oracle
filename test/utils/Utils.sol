@@ -3,7 +3,6 @@ pragma solidity >=0.8.25 < 0.9.0;
 
 import { Test } from "forge-std/Test.sol";
 import { OrderParams } from "test/utils/Types.sol";
-import { GPv2Order } from "cowprotocol/contracts/libraries/GPv2Order.sol";
 
 contract Utils is Test {
     /*----------------------------------------------------------*|
@@ -67,6 +66,11 @@ contract Utils is Test {
     /// @dev Helper to set the pool state as finalized, required for LPOracle._simulateOrder calls.
     function mock_pool__finalized(address pool) internal {
         vm.mockCall(pool, abi.encodeWithSignature("_finalized()"), abi.encode(true));
+    }
+
+    /// @dev Helper to mock total supply of pool LP tokens
+    function mock_pool_totalSupply(address pool, uint256 supply) internal {
+        vm.mockCall(pool, abi.encodeWithSignature("totalSupply()"), abi.encode(supply));
     }
 
     /*----------------------------------------------------------*|

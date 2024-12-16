@@ -3,13 +3,14 @@ pragma solidity >=0.8.25 < 0.9.0;
 
 import { ExposedLPOracle } from "test/harness/ExposedLPOracle.sol";
 import { MockBCoWHelper } from "test/mocks/MockBCoWHelper.sol";
+import { BMath } from "@balancer/cow-amm/src/contracts/BMath.sol";
 
 import { Assertions } from "test/utils/Assertions.sol";
 import { Defaults } from "test/utils/Defaults.sol";
 import { OrderParams, TokenParams, FeedParams } from "test/utils/Types.sol";
 import { Utils } from "test/utils/Utils.sol";
 
-contract BaseTest is Assertions, Defaults, Utils {
+contract BaseTest is Assertions, BMath, Defaults, Utils {
     address internal MOCK_POOL = makeAddr("MOCK_POOL");
     address internal MOCK_FACTORY = makeAddr("MOCK_FACTORY");
     address internal TOKEN0 = makeAddr("TOKEN0");

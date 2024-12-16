@@ -6,7 +6,7 @@ import { AggregatorV3Interface } from "@cow-amm/interfaces/AggregatorV3Interface
 import { IERC20 } from "cowprotocol/contracts/interfaces/IERC20.sol";
 import { GPv2Order } from "cowprotocol/contracts/libraries/GPv2Order.sol";
 
-contract LPOracle {
+contract LPOracle is AggregatorV3Interface {
     /// @notice Thrown when Chainlink price feeds with more than 18 decimals are used.
     error UnsupportedDecimals();
 
@@ -59,6 +59,66 @@ contract LPOracle {
         TOKEN0_DECIMALS = TOKEN0.decimals();
         TOKEN1_DECIMALS = TOKEN1.decimals();
     }
+
+    /*----------------------------------------------------------*|
+    |*  # AGGREGATOR V3 INTERFACE REQUIREMENTS                  *|
+    |*----------------------------------------------------------*/
+
+    /// @notice Returns the number of decimals used.
+    function decimals() external pure returns (uint8) {
+        return 8;
+    }
+
+    /// @notice Returns the description of the LP token pricing oracle.
+    function description() external view returns (string memory) {
+        return string.concat(IERC20(POOL).name(), " LP Token / USD");
+    }
+
+    /// @notice Returns the oracle version.
+    /// @dev Chainlink interface requires implementation.
+    function version() external pure returns (uint256) {
+        return 0;
+    }
+
+    /// @dev Chainlink interface requires implementation. No meaningful values for this contract.
+    function getRoundData(uint80)
+        external
+        pure
+        returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
+    {
+        return (0, 0, 0, 0, 0);
+    }
+
+    /// @notice Returns the latest price data for the BCoWPool AMM LP Token.
+    /// @dev Price is determined based on simulated reserve balances post rebalancing trade from external price feeds.
+    /// @return roundId Not implemented.
+    /// @return answer LP Token price.
+    /// @return startedAt Not implemented.
+    /// @return updatedAt The timestamp of the feed with the oldest price udpate.
+    /// @return answeredInRound Not implemented.
+    function latestRoundData()
+        external
+        view
+        returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
+    {
+        /* Get the price feed data */
+        (uint256 price0, uint256 price1, uint256 updatedAt_) = _getFeedData();
+
+        /* Simulate the order */
+        GPv2Order.Data memory order = _simulateOrder(price0, price1);
+
+        /* Determine simulated pool reserves post rebalancing trade adjusted for decimals */
+        (uint256 token0Bal, uint256 token1Bal) = _simulatePoolReserves(order);
+
+        /* Determine LP token price */
+        uint256 lpPrice = (token0Bal * price0 + token1Bal * price1) / IERC20(POOL).totalSupply();
+
+        return (0, int256(lpPrice), 0, updatedAt_, 0);
+    }
+
+    /*----------------------------------------------------------*|
+    |*  # INTERNAL HELPERS                                      *|
+    |*----------------------------------------------------------*/
 
     /// @notice Retrieves latest price data from Chainlink feeds and adjusts for decimals.
     /// @return price0 USD price of token 0.
