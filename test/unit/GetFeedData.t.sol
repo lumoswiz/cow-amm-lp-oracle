@@ -69,7 +69,7 @@ contract GetFeedData_Unit_Test is BaseTest {
         FeedParams memory params0 =
             FeedParams({ addr: FEED0, decimals: 8, answer: answer0, updatedAt: block.timestamp });
         FeedParams memory params1 =
-            FeedParams({ addr: FEED1, decimals: 8, answer: answer1, updatedAt: block.timestamp + 1 });
+            FeedParams({ addr: FEED1, decimals: 8, answer: answer1, updatedAt: block.timestamp });
 
         setPriceFeedData(params0, params1);
 
@@ -91,7 +91,7 @@ contract GetFeedData_Unit_Test is BaseTest {
         FeedParams memory params0 =
             FeedParams({ addr: FEED0, decimals: 8, answer: answer0, updatedAt: block.timestamp });
         FeedParams memory params1 =
-            FeedParams({ addr: FEED1, decimals: 8, answer: answer1, updatedAt: block.timestamp + 1 });
+            FeedParams({ addr: FEED1, decimals: 8, answer: answer1, updatedAt: block.timestamp });
 
         setPriceFeedData(params0, params1);
 
