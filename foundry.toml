@@ -35,7 +35,9 @@ tab_width = 4
 wrap_comments = true
 
 [rpc_endpoints]
-gnosis_chain = "https://rpc.ankr.com/gnosis"
-localhost = "http://localhost:8545"
 mainnet = "https://rpc.ankr.com/eth"
-sepolia = "https://sepolia.infura.io/v3/${API_KEY_INFURA}"
+sepolia = "https://rpc2.sepolia.org"
+gnosis = "https://rpc.ankr.com/gnosis"
+arbitrum = "https://rpc.ankr.com/arbitrum"
+base = "https://rpc.ankr.com/base"
+localhost = "http://localhost:8545"
