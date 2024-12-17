@@ -3,16 +3,14 @@ pragma solidity 0.8.25;
 
 import { LPOracle } from "./LPOracle.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-import { ILPOracleFactory } from "./interfaces/IOracleFactory.sol";
 
 /// @title LPOracle Factory
 /// @notice Factory contract for deploying LPOracle instances with deterministic addresses
-contract LPOracleFactory is Ownable, ILPOracleFactory {
+contract LPOracleFactory is Ownable {
     error OracleAlreadyExists();
     error DeployFailed();
 
     /// @notice BCoWHelper contract address used for all oracle deployments
-
     address public immutable HELPER;
 
     /// @notice Creation code hash for LPOracle contract
