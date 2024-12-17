@@ -98,5 +98,7 @@ contract GetFeedData_Unit_Test is BaseTest {
         (uint256 price0, uint256 price1, uint256 updatedAt) = oracle.exposed_getFeedData();
 
         assertEq(int256(price0), answer0);
+        assertEq(int256(price1), answer1);
+        assertEq(updatedAt, block.timestamp, "updatedAt");
     }
 }
