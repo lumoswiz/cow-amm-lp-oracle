@@ -4,11 +4,10 @@ pragma solidity 0.8.25;
 import { BaseTest } from "test/Base.t.sol";
 import { console } from "forge-std/console.sol";
 import { LPOracleFactory } from "src/LPOracleFactory.sol";
-import { ILPOracleFactory } from "src/interfaces/IOracleFactory.sol";
 import { LPOracle } from "src/LPOracle.sol";
 
 contract OracleFactoryBenchmark is BaseTest {
-    ILPOracleFactory public factory;
+    LPOracleFactory public factory;
 
     function setUp() public override {
         // Call the setUp() function from BaseTest
@@ -26,7 +25,7 @@ contract OracleFactoryBenchmark is BaseTest {
         uint256 writes;
     }
 
-    function _benchmarkFactory(ILPOracleFactory _factory) private returns (BenchmarkResult memory) {
+    function _benchmarkFactory(LPOracleFactory _factory) private returns (BenchmarkResult memory) {
         vm.record();
         uint256 gasStart = gasleft();
         _factory.deployOracle(MOCK_POOL, FEED0, FEED1);
