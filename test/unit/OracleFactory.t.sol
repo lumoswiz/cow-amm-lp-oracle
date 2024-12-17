@@ -95,6 +95,7 @@ contract OracleFactoryBenchmark is BaseTest {
 
         // Verify oracle is registered in factory
         assertEq(factory.getOracle(MOCK_POOL), oracleAddr, "Oracle not registered in factory");
+        console.log("Oracle address:", oracleAddr);
     }
 
     function test_CannotDeployDuplicateOracle() public {
@@ -102,7 +103,7 @@ contract OracleFactoryBenchmark is BaseTest {
         factory.deployOracle(MOCK_POOL, FEED0, FEED1);
 
         // Attempt to deploy second oracle for same pool
-        vm.expectRevert("Oracle already exists");
+        vm.expectRevert(abi.encodeWithSignature("OracleAlreadyExists()"));
         factory.deployOracle(MOCK_POOL, FEED0, FEED1);
     }
 }

@@ -35,7 +35,8 @@ contract LPOracleFactory is Ownable, ILPOracleFactory {
     /// @param feed1 Chainlink USD price feed for pool token at index 1
     /// @return The address where the oracle would be deployed
     function computeOracleAddress(address pool, address feed0, address feed1) public view returns (address) {
-        (bytes32 salt, bytes memory bytecode) = _computeDeploymentData(pool, feed0, feed1);
+        bytes32 salt = keccak256(abi.encodePacked(pool, feed0, feed1));
+        bytes memory bytecode = abi.encodePacked(ORACLE_CREATION_CODE, abi.encode(pool, HELPER, feed0, feed1));
 
         return address(
             uint160(
@@ -60,34 +61,13 @@ contract LPOracleFactory is Ownable, ILPOracleFactory {
     /// @return oracle Address of the newly deployed oracle
     function deployOracle(address pool, address feed0, address feed1) external returns (address oracle) {
         if (getOracle[pool] != address(0)) revert OracleAlreadyExists();
-        (bytes32 salt, bytes memory bytecode) = _computeDeploymentData(pool, feed0, feed1);
 
-        assembly {
-            oracle := create2(0, add(bytecode, 32), mload(bytecode), salt)
-        }
+        bytes32 salt = keccak256(abi.encodePacked(pool, feed0, feed1));
+        oracle = address(new LPOracle{ salt: salt }(pool, HELPER, feed0, feed1));
 
         if (oracle == address(0)) revert DeployFailed();
         getOracle[pool] = oracle;
 
         emit OracleDeployed(pool, oracle);
-    }
-
-    /// @dev Internal function to compute the salt and bytecode for oracle deployment
-    /// @param pool BCoWPool address
-    /// @param feed0 Chainlink USD price feed for pool token at index 0
-    /// @param feed1 Chainlink USD price feed for pool token at index 1
-    /// @return salt The computed salt for Create2
-    /// @return bytecode The complete bytecode including constructor args
-    function _computeDeploymentData(
-        address pool,
-        address feed0,
-        address feed1
-    )
-        internal
-        view
-        returns (bytes32 salt, bytes memory bytecode)
-    {
-        salt = keccak256(abi.encodePacked(pool, feed0, feed1));
-        bytecode = abi.encodePacked(ORACLE_CREATION_CODE, abi.encode(pool, HELPER, feed0, feed1));
     }
 }
