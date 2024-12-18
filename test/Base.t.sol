@@ -79,7 +79,6 @@ contract BaseTest is Assertions, Calculations, Utils {
         mock_address_decimals(mocks.token1, decimals1);
     }
 
-    // Todo: implement input args for pool. tokens, balances, etc.
     function setMockOrder(uint256 token0Balance, uint256 token1Balance, uint256 token0Weight) internal {
         OrderParams memory params = defaults.mockOrderParamsCustomValues(token0Balance, token1Balance, token0Weight);
         mock_helper_order(params);
@@ -90,5 +89,20 @@ contract BaseTest is Assertions, Calculations, Utils {
         setFeedDecimals(params0.decimals, params1.decimals);
         mock_feed_latestRoundData(params0.addr, params0.answer, params0.updatedAt);
         mock_feed_latestRoundData(params1.addr, params1.answer, params1.updatedAt);
+    }
+
+    function setLatestRoundDataMocks(
+        int256 answer0,
+        int256 answer1,
+        uint256 token0Balance,
+        uint256 token1Balance,
+        uint256 token0Weight
+    )
+        internal
+    {
+        (FeedParams memory feedParams0, FeedParams memory feedParams1) = defaults.mockFeedParams(answer0, answer1);
+        setPriceFeedData(feedParams0, feedParams1);
+        setMockOrder(token0Balance, token1Balance, token0Weight);
+        mock_pool_totalSupply(mocks.pool, defaults.LP_TOKEN_SUPPLY());
     }
 }

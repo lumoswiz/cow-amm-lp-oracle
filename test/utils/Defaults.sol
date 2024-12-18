@@ -17,6 +17,9 @@ contract Defaults is Constants {
 
     uint8 public constant FEED_DECIMALS = 8;
 
+    int256 public constant ANSWER0 = 4000e8;
+    int256 public constant ANSWER1 = 1e8;
+
     Mocks private mocks;
 
     /*----------------------------------------------------------*|
