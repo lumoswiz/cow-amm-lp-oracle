@@ -63,7 +63,7 @@ contract LatestRoundData_Unit_Test is BaseTest {
         uint256 token1PoolReserve = 1000e18;
 
         setLatestRoundDataMocks(
-            defaults.ANSWER0(), defaults.ANSWER1(), token0PoolReserve, token1PoolReserve, defaults.WEIGHT_50()
+            defaults.ANSWER0(), defaults.ANSWER1(), token0PoolReserve, token1PoolReserve, defaults.WEIGHT_80()
         );
 
         (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =
@@ -84,7 +84,7 @@ contract LatestRoundData_Unit_Test is BaseTest {
         _;
     }
 
-    function test_50_50Pool_LargeUnbalancing_TooMuchToken1() external whenPositivePrices whenUnbalancedPool {
+    function test_LargeUnbalancing_50_50Pool_TooMuchToken1() external whenPositivePrices whenUnbalancedPool {
         // Initial balanced pool state
         uint256 token0PoolReserve = 1e18;
         uint256 token1PoolReserve = 4000e18;
@@ -118,7 +118,7 @@ contract LatestRoundData_Unit_Test is BaseTest {
         assertApproxEqRel(uint256(answer), 8e8, 2.5e16);
     }
 
-    function test_50_50Pool_LargeUnbalancing_TooMuchToken0() external whenPositivePrices whenUnbalancedPool {
+    function test_LargeUnbalancing_50_50Pool_TooMuchToken0() external whenPositivePrices whenUnbalancedPool {
         // Initial balanced pool state
         uint256 token0PoolReserve = 1e18;
         uint256 token1PoolReserve = 4000e18;
@@ -152,7 +152,7 @@ contract LatestRoundData_Unit_Test is BaseTest {
         assertApproxEqRel(uint256(answer), 8e8, 2.5e16);
     }
 
-    function test_80_20Pool_LargeUnbalancing_TooMuchToken1() external whenPositivePrices whenUnbalancedPool {
+    function test_LargeUnbalancing_80_20Pool_TooMuchToken1() external whenPositivePrices whenUnbalancedPool {
         // Initial balanced pool state 80% token 0 - 20% token 1
         // Price in balanced state is 5e8
         uint256 token0PoolReserve = 1e18;
@@ -186,7 +186,7 @@ contract LatestRoundData_Unit_Test is BaseTest {
         assertApproxEqRel(uint256(answer), 5e8, 1e15);
     }
 
-    function test_80_20Pool_LargeUnbalancing_TooMuchToken0() external whenPositivePrices whenUnbalancedPool {
+    function test_LargeUnbalancing_0_20Pool_TooMuchToken0() external whenPositivePrices whenUnbalancedPool {
         // Initial balanced pool state 80% token 0 - 20% token 1
         // Price in balanced state is 5e8
         uint256 token0PoolReserve = 1e18;
