@@ -3,39 +3,51 @@ pragma solidity >=0.8.25 < 0.9.0;
 
 import { ExposedLPOracle } from "test/harness/ExposedLPOracle.sol";
 import { MockBCoWHelper } from "test/mocks/MockBCoWHelper.sol";
-import { BMath } from "@balancer/cow-amm/src/contracts/BMath.sol";
 
 import { Assertions } from "test/utils/Assertions.sol";
+import { Calculations } from "test/utils/Calculations.sol";
 import { Defaults } from "test/utils/Defaults.sol";
-import { OrderParams, TokenParams, FeedParams } from "test/utils/Types.sol";
+import { Mocks, OrderParams, TokenParams, FeedParams } from "test/utils/Types.sol";
 import { Utils } from "test/utils/Utils.sol";
 
-contract BaseTest is Assertions, BMath, Defaults, Utils {
-    address internal MOCK_POOL = makeAddr("MOCK_POOL");
-    address internal MOCK_FACTORY = makeAddr("MOCK_FACTORY");
-    address internal TOKEN0 = makeAddr("TOKEN0");
-    address internal TOKEN1 = makeAddr("TOKEN1");
-    address internal FEED0 = makeAddr("FEED0");
-    address internal FEED1 = makeAddr("FEED1");
+contract BaseTest is Assertions, Calculations, Utils {
+    Mocks internal mocks;
 
+    Defaults internal defaults;
     ExposedLPOracle internal oracle;
     MockBCoWHelper internal helper;
 
     function setUp() public virtual {
+        // Deploy the defaults contract.
+        defaults = new Defaults();
+
+        // Create & label mock addresses for testing.
+        vm.label(mocks.factory = makeAddr("FACTORY"), "FACTORY");
+        vm.label(mocks.pool = makeAddr("POOL"), "POOL");
+        vm.label(mocks.token0 = makeAddr("TOKEN0"), "TOKEN0");
+        vm.label(mocks.token1 = makeAddr("TOKEN1"), "TOKEN1");
+        vm.label(mocks.feed0 = makeAddr("FEED0"), "FEED0");
+        vm.label(mocks.feed1 = makeAddr("FEED1"), "FEED1");
+        defaults.setMocks(mocks);
+
         // Mock BCoWFactory.APP_DATA() call
-        mock_factory_APP_DATA(MOCK_FACTORY, APP_DATA);
+        mock_factory_APP_DATA(mocks.factory, defaults.APP_DATA());
 
         // Deploy MockBCoWHelper with default configuration
-        helper = new MockBCoWHelper(MOCK_FACTORY);
+        helper = new MockBCoWHelper(mocks.factory);
         vm.label(address(helper), "MockBCoWHelper");
 
         // Setup default decimal configs: feeds -> 8, tokens -> 18
         setAllAddressDecimals(8, 8, 18, 18);
 
         // Initialize oracle with default configuration
-        oracle = new ExposedLPOracle(MOCK_POOL, address(helper), FEED0, FEED1);
+        oracle = new ExposedLPOracle(mocks.pool, address(helper), mocks.feed0, mocks.feed1);
         vm.label(address(oracle), "ExposedLPOracle");
     }
+
+    /*----------------------------------------------------------*|
+    |*  # HELPERS: MOCKS                                        *|
+    |*----------------------------------------------------------*/
 
     /// @dev Helper to mock all decimals for addresses in LPOracle.
     /// @dev Inputs in order they appear in the constructor.
@@ -53,45 +65,23 @@ contract BaseTest is Assertions, BMath, Defaults, Utils {
 
     /// @dev Helper to mock price feed decimals
     function setFeedDecimals(uint8 decimals0, uint8 decimals1) internal {
-        mock_address_decimals(FEED0, decimals0);
-        mock_address_decimals(FEED1, decimals1);
+        mock_address_decimals(mocks.feed0, decimals0);
+        mock_address_decimals(mocks.feed1, decimals1);
     }
 
     /// @dev Helper to mock BCoWHelper.tokens() call & set token decimals
     function setTokenDecimals(uint8 decimals0, uint8 decimals1) internal {
         // Mock helper.tokens() call
-        mock_helper_tokens(address(helper), MOCK_POOL, TOKEN0, TOKEN1);
+        mock_helper_tokens(address(helper), mocks.pool, mocks.token0, mocks.token1);
 
         // Mock decimals() calls for both tokens
-        mock_address_decimals(TOKEN0, decimals0);
-        mock_address_decimals(TOKEN1, decimals1);
-    }
-
-    /// @dev Helper to reinitialize oracle after changing decimals
-    function reinitOracle(uint8 decimals0, uint8 decimals1) internal {
-        setAllAddressDecimals(8, 8, decimals0, decimals1);
-        oracle = new ExposedLPOracle(MOCK_POOL, address(helper), FEED0, FEED1);
+        mock_address_decimals(mocks.token0, decimals0);
+        mock_address_decimals(mocks.token1, decimals1);
     }
 
     // Todo: implement input args for pool. tokens, balances, etc.
     function setMockOrder(uint256 token0Balance, uint256 token1Balance, uint256 token0Weight) internal {
-        OrderParams memory params = OrderParams({
-            pool: MOCK_POOL,
-            factory: MOCK_FACTORY,
-            token0: TokenParams({
-                addr: TOKEN0,
-                balance: token0Balance,
-                normWeight: token0Weight,
-                denormWeight: DENORMALIZED_WEIGHT
-            }),
-            token1: TokenParams({
-                addr: TOKEN1,
-                balance: token1Balance,
-                normWeight: BONE - token0Weight,
-                denormWeight: DENORMALIZED_WEIGHT
-            })
-        });
-
+        OrderParams memory params = defaults.mockOrderParamsCustomValues(token0Balance, token1Balance, token0Weight);
         mock_helper_order(params);
     }
 

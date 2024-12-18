@@ -7,12 +7,12 @@ import { GPv2Order } from "cowprotocol/contracts/libraries/GPv2Order.sol";
 
 contract SimulatePoolReserves_Unit_Test is BaseTest {
     function test_SimulatePoolReserves_Balanced50_50Pool() external {
-        setMockOrder(TOKEN0_BALANCE, TOKEN1_BALANCE, NORMALIZED_WEIGHT);
+        setMockOrder(defaults.TOKEN0_BALANCE(), defaults.TOKEN1_BALANCE(), defaults.NORMALIZED_WEIGHT());
         GPv2Order.Data memory order = oracle.exposed_simulateOrder(1e8, 1e8);
 
         (uint256 token0Bal, uint256 token1Bal) = oracle.exposed_simulatePoolReserves(order);
-        assertEq(token0Bal, TOKEN0_BALANCE);
-        assertEq(token1Bal, TOKEN1_BALANCE);
+        assertEq(token0Bal, defaults.TOKEN0_BALANCE());
+        assertEq(token1Bal, defaults.TOKEN1_BALANCE());
     }
 
     function test_SimulatePoolReserves_Balanced80_20Pool() external {

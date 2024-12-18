@@ -6,11 +6,13 @@ import { FeedParams } from "test/utils/Types.sol";
 
 contract GetFeedData_Unit_Test is BaseTest {
     function testFuzz_Feed0_UpdatedAt_IsOldest(uint256 feed0UpdatedAt, uint256 feed1UpdatedAt) external {
-        feed0UpdatedAt = bound(feed0UpdatedAt, 0, DEC_1_2024);
+        feed0UpdatedAt = bound(feed0UpdatedAt, 0, defaults.DEC_1_2024());
         feed1UpdatedAt = bound(feed1UpdatedAt, feed0UpdatedAt + 1, type(uint40).max);
 
-        FeedParams memory params0 = FeedParams({ addr: FEED0, decimals: 8, answer: 1e8, updatedAt: feed0UpdatedAt });
-        FeedParams memory params1 = FeedParams({ addr: FEED1, decimals: 8, answer: 1.1e8, updatedAt: feed1UpdatedAt });
+        FeedParams memory params0 =
+            FeedParams({ addr: mocks.feed0, decimals: 8, answer: 1e8, updatedAt: feed0UpdatedAt });
+        FeedParams memory params1 =
+            FeedParams({ addr: mocks.feed1, decimals: 8, answer: 1.1e8, updatedAt: feed1UpdatedAt });
 
         setPriceFeedData(params0, params1);
 
@@ -20,11 +22,13 @@ contract GetFeedData_Unit_Test is BaseTest {
     }
 
     function testFuzz_Feed1_UpdatedAt_IsOldest(uint256 feed0UpdatedAt, uint256 feed1UpdatedAt) external {
-        feed1UpdatedAt = bound(feed1UpdatedAt, 0, DEC_1_2024);
+        feed1UpdatedAt = bound(feed1UpdatedAt, 0, defaults.DEC_1_2024());
         feed0UpdatedAt = bound(feed0UpdatedAt, feed1UpdatedAt + 1, type(uint40).max);
 
-        FeedParams memory params0 = FeedParams({ addr: FEED0, decimals: 8, answer: 1e8, updatedAt: feed0UpdatedAt });
-        FeedParams memory params1 = FeedParams({ addr: FEED1, decimals: 8, answer: 1.1e8, updatedAt: feed1UpdatedAt });
+        FeedParams memory params0 =
+            FeedParams({ addr: mocks.feed0, decimals: 8, answer: 1e8, updatedAt: feed0UpdatedAt });
+        FeedParams memory params1 =
+            FeedParams({ addr: mocks.feed1, decimals: 8, answer: 1.1e8, updatedAt: feed1UpdatedAt });
 
         setPriceFeedData(params0, params1);
 
@@ -47,10 +51,7 @@ contract GetFeedData_Unit_Test is BaseTest {
         vm.assume(answer0 < 0);
         answer1 = bound(answer1, 1, 1e16);
 
-        FeedParams memory params0 =
-            FeedParams({ addr: FEED0, decimals: 8, answer: answer0, updatedAt: block.timestamp });
-        FeedParams memory params1 =
-            FeedParams({ addr: FEED1, decimals: 8, answer: answer1, updatedAt: block.timestamp });
+        (FeedParams memory params0, FeedParams memory params1) = defaults.mockFeedParams(answer0, answer1);
 
         setPriceFeedData(params0, params1);
 
@@ -66,10 +67,7 @@ contract GetFeedData_Unit_Test is BaseTest {
         vm.assume(answer1 < 0);
         answer0 = bound(answer0, 1, 1e16);
 
-        FeedParams memory params0 =
-            FeedParams({ addr: FEED0, decimals: 8, answer: answer0, updatedAt: block.timestamp });
-        FeedParams memory params1 =
-            FeedParams({ addr: FEED1, decimals: 8, answer: answer1, updatedAt: block.timestamp });
+        (FeedParams memory params0, FeedParams memory params1) = defaults.mockFeedParams(answer0, answer1);
 
         setPriceFeedData(params0, params1);
 
@@ -88,10 +86,7 @@ contract GetFeedData_Unit_Test is BaseTest {
         answer0 = bound(answer0, 1, 1e24);
         answer1 = bound(answer1, 1, 1e24);
 
-        FeedParams memory params0 =
-            FeedParams({ addr: FEED0, decimals: 8, answer: answer0, updatedAt: block.timestamp });
-        FeedParams memory params1 =
-            FeedParams({ addr: FEED1, decimals: 8, answer: answer1, updatedAt: block.timestamp });
+        (FeedParams memory params0, FeedParams memory params1) = defaults.mockFeedParams(answer0, answer1);
 
         setPriceFeedData(params0, params1);
 

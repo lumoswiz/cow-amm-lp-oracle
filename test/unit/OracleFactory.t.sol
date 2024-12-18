@@ -28,13 +28,13 @@ contract OracleFactoryBenchmark is BaseTest {
     function _benchmarkFactory(LPOracleFactory _factory) private returns (BenchmarkResult memory) {
         vm.record();
         uint256 gasStart = gasleft();
-        _factory.deployOracle(MOCK_POOL, FEED0, FEED1);
+        _factory.deployOracle(mocks.pool, mocks.feed0, mocks.feed1);
         uint256 gasUsed = gasStart - gasleft();
 
         (bytes32[] memory reads, bytes32[] memory writes) = vm.accesses(address(factory));
 
         uint256 gasStart2 = gasleft();
-        _factory.computeOracleAddress(MOCK_POOL, FEED0, FEED1);
+        _factory.computeOracleAddress(mocks.pool, mocks.feed0, mocks.feed1);
         uint256 gasUsed2 = gasStart2 - gasleft();
         return BenchmarkResult({
             gasUsedDeploy: gasUsed,
@@ -60,15 +60,15 @@ contract OracleFactoryBenchmark is BaseTest {
 
     function test_Benchmark_VerifyAddressConsistency() public {
         // Deploy oracles
-        address oracle = factory.deployOracle(MOCK_POOL, FEED0, FEED1);
+        address oracle = factory.deployOracle(mocks.pool, mocks.feed0, mocks.feed1);
 
         // Verify computed addresses match deployed addresses
-        assertEq(factory.computeOracleAddress(MOCK_POOL, FEED0, FEED1), oracle, "Factory");
+        assertEq(factory.computeOracleAddress(mocks.pool, mocks.feed0, mocks.feed1), oracle, "Factory");
     }
 
     function test_DeployedOracleIsValid() public {
         // Deploy oracle
-        address oracleAddr = factory.deployOracle(MOCK_POOL, FEED0, FEED1);
+        address oracleAddr = factory.deployOracle(mocks.pool, mocks.feed0, mocks.feed1);
 
         // Verify oracle was deployed successfully
         assertTrue(oracleAddr != address(0), "Oracle not deployed");
@@ -77,10 +77,10 @@ contract OracleFactoryBenchmark is BaseTest {
         LPOracle oracle = LPOracle(oracleAddr);
 
         // Verify oracle initialization parameters
-        assertEq(oracle.POOL(), MOCK_POOL, "Wrong pool address");
+        assertEq(oracle.POOL(), mocks.pool, "Wrong pool address");
         assertEq(address(oracle.HELPER()), address(helper), "Wrong helper address");
-        assertEq(address(oracle.FEED0()), FEED0, "Wrong feed0 address");
-        assertEq(address(oracle.FEED1()), FEED1, "Wrong feed1 address");
+        assertEq(address(oracle.FEED0()), mocks.feed0, "Wrong feed0 address");
+        assertEq(address(oracle.FEED1()), mocks.feed1, "Wrong feed1 address");
 
         // TODO(bh2smith): We would need to add some additional mocking to test this functionality.
         // // Verify oracle can be called (this will revert if oracle is not properly initialized)
@@ -93,16 +93,16 @@ contract OracleFactoryBenchmark is BaseTest {
         // }
 
         // Verify oracle is registered in factory
-        assertEq(factory.getOracle(MOCK_POOL), oracleAddr, "Oracle not registered in factory");
+        assertEq(factory.getOracle(mocks.pool), oracleAddr, "Oracle not registered in factory");
         console.log("Oracle address:", oracleAddr);
     }
 
     function test_CannotDeployDuplicateOracle() public {
         // Deploy first oracle
-        factory.deployOracle(MOCK_POOL, FEED0, FEED1);
+        factory.deployOracle(mocks.pool, mocks.feed0, mocks.feed1);
 
         // Attempt to deploy second oracle for same pool
         vm.expectRevert(abi.encodeWithSignature("OracleAlreadyExists()"));
-        factory.deployOracle(MOCK_POOL, FEED0, FEED1);
+        factory.deployOracle(mocks.pool, mocks.feed0, mocks.feed1);
     }
 }
