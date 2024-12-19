@@ -113,9 +113,9 @@ contract LatestRoundData_Unit_Test is BaseTest {
 
         // Assertions
         // The naive LP token price is approx 25% higher than balanced pool price.
-        assertApproxEqRel(naivePrice, 10e8, 1e16);
-        // LP token price is within 2.5% of the balanced pool state
-        assertApproxEqRel(uint256(answer), 8e8, 2.5e16);
+        assertApproxEqRel(naivePrice, 10e8, 1e16); // within 1% of 10e8
+        // LP token price is within 0.1% of the balanced pool state
+        assertApproxEqRel(uint256(answer), 8e8, 1e15);
     }
 
     function test_LargeUnbalancing_50_50Pool_TooMuchToken0() external whenPositivePrices whenUnbalancedPool {
@@ -148,8 +148,8 @@ contract LatestRoundData_Unit_Test is BaseTest {
         // Assertions
         // The naive LP token price is approx 25% higher than balanced pool price.
         assertApproxEqRel(naivePrice, 10e8, 1e16);
-        // LP token price is within 2.5% of the balanced pool state
-        assertApproxEqRel(uint256(answer), 8e8, 2.5e16);
+        // LP token price is within 0.1% of the balanced pool state
+        assertApproxEqRel(uint256(answer), 8e8, 1e15);
     }
 
     function test_LargeUnbalancing_80_20Pool_TooMuchToken1() external whenPositivePrices whenUnbalancedPool {
