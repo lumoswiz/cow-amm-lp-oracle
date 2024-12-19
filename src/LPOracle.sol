@@ -10,6 +10,9 @@ contract LPOracle is AggregatorV3Interface {
     /// @notice Thrown when Chainlink price feeds with more than 18 decimals are used.
     error UnsupportedDecimals();
 
+    /// @notice Thrown when a Chainlink price feed returns a negative answer.
+    error NegativeAnswer();
+
     /// @notice BCoWPool address.
     address public immutable POOL;
 
@@ -25,10 +28,10 @@ contract LPOracle is AggregatorV3Interface {
     IERC20 public immutable TOKEN1;
 
     /// @notice Pool token 0 decimals
-    uint256 public immutable TOKEN0_DECIMALS;
+    uint8 public immutable TOKEN0_DECIMALS;
 
     /// @notice Pool token 1 decimals
-    uint256 public immutable TOKEN1_DECIMALS;
+    uint8 public immutable TOKEN1_DECIMALS;
 
     /// @notice Chainlink USD price for pool token 0
     AggregatorV3Interface public immutable FEED0;
@@ -111,7 +114,7 @@ contract LPOracle is AggregatorV3Interface {
         (uint256 token0Bal, uint256 token1Bal) = _simulatePoolReserves(order);
 
         /* Determine LP token price */
-        uint256 lpPrice = (token0Bal * price0 + token1Bal * price1) / IERC20(POOL).totalSupply();
+        uint256 lpPrice = _calculatePrice(token0Bal, token1Bal, price0, price1);
 
         return (0, int256(lpPrice), 0, updatedAt_, 0);
     }
@@ -124,16 +127,46 @@ contract LPOracle is AggregatorV3Interface {
     /// @return price0 USD price of token 0.
     /// @return price1 USD price of token1.
     /// @return updatedAt The timestamp of the feed with the oldest price udpate.
-    function _getFeedData() internal view returns (uint256 price0, uint256 price1, uint256 updatedAt) {
+    function _getFeedData() internal view returns (uint256, uint256, uint256) {
         /* Get latestRoundData from price feeds */
         (, int256 answer0,, uint256 updatedAt0,) = FEED0.latestRoundData();
         (, int256 answer1,, uint256 updatedAt1,) = FEED1.latestRoundData();
 
+        /* Handle negative answers */
+        if (answer0 < 0 || answer1 < 0) revert NegativeAnswer();
+
         /* Adjust answers for price feed decimals */
-        (price0, price1) = _adjustDecimals(uint256(answer0), uint256(answer1), FEED0.decimals(), FEED1.decimals());
+        (uint256 price0, uint256 price1) =
+            _adjustDecimals(uint256(answer0), uint256(answer1), FEED0.decimals(), FEED1.decimals());
 
         /* Set update timestamp of oldest price feed */
-        updatedAt = updatedAt0 < updatedAt1 ? updatedAt0 : updatedAt1;
+        uint256 updatedAt = updatedAt0 < updatedAt1 ? updatedAt0 : updatedAt1;
+
+        return (price0, price1, updatedAt);
+    }
+
+    /// @notice Adjusts input values according to decimals.
+    /// @dev Used to adjust pool reserve balances and price feed answers.
+    /// @param value0 Value associated with pool token 0.
+    /// @param value1 Value associated with pool token 1.
+    /// @param decimals0 Decimals for value0.
+    /// @param decimals1 Decimals for value1.
+    /// @return Ensures the return values have the same decimal base.
+    function _adjustDecimals(
+        uint256 value0,
+        uint256 value1,
+        uint8 decimals0,
+        uint8 decimals1
+    )
+        internal
+        pure
+        returns (uint256, uint256)
+    {
+        if (decimals0 == decimals1) {
+            return (value0, value1);
+        } else {
+            return (value0 * (10 ** (18 - decimals0)), value1 * (10 ** (18 - decimals1)));
+        }
     }
 
     /// @notice Retrieves the order to satisfy the pool's invariants given the token prices.
@@ -142,10 +175,13 @@ contract LPOracle is AggregatorV3Interface {
     /// @param price0 USD price of pool token 0.
     /// @param price1 USD price of pool token 1.
     /// @return order Order required to satisfy pool's invariants given the input pricing vector.
-    function _simulateOrder(uint256 price0, uint256 price1) internal view returns (GPv2Order.Data memory order) {
+    function _simulateOrder(uint256 price0, uint256 price1) internal view returns (GPv2Order.Data memory) {
         uint256[] memory prices = _normalizePrices(price0, price1);
+
         /* Simulate the order */
-        (order,,,) = HELPER.order(POOL, prices);
+        (GPv2Order.Data memory order,,,) = HELPER.order(POOL, prices);
+
+        return order;
     }
 
     /// @notice Normalizes input prices to the format expected by the pool helper
@@ -154,10 +190,12 @@ contract LPOracle is AggregatorV3Interface {
     /// @param price0 price of pool token 0
     /// @param price1 price of pool token 1
     /// @return prices Array of normalized prices where prices[0] = 1e18 and prices[1] is the relative price
-    function _normalizePrices(uint256 price0, uint256 price1) internal view returns (uint256[] memory prices) {
-        prices = new uint256[](2);
+    function _normalizePrices(uint256 price0, uint256 price1) internal view returns (uint256[] memory) {
+        uint256[] memory prices = new uint256[](2);
         prices[0] = 1e18;
         prices[1] = (price1 * (10 ** TOKEN0_DECIMALS) * 1e18) / (price0 * (10 ** TOKEN1_DECIMALS));
+
+        return prices;
     }
 
     /// @notice Retrieves the simulated pool reserves post rebalancing trade.
@@ -165,11 +203,7 @@ contract LPOracle is AggregatorV3Interface {
     /// @param order The simulated rebalancing trade order.
     /// @return token0Bal Simulated pool balance of token 0.
     /// @return token1Bal Simulated pool balance of token 1.
-    function _simulatePoolReserves(GPv2Order.Data memory order)
-        internal
-        view
-        returns (uint256 token0Bal, uint256 token1Bal)
-    {
+    function _simulatePoolReserves(GPv2Order.Data memory order) internal view returns (uint256, uint256) {
         /* Get current pool token balances */
         uint256 balance0 = TOKEN0.balanceOf(POOL);
         uint256 balance1 = TOKEN1.balanceOf(POOL);
@@ -183,31 +217,29 @@ contract LPOracle is AggregatorV3Interface {
             balance1 += order.buyAmount;
         }
 
-        /* Adjust for decimals */
-        (token0Bal, token1Bal) = _adjustDecimals(balance0, balance1, TOKEN0_DECIMALS, TOKEN1_DECIMALS);
+        return (balance0, balance1);
     }
 
-    /// @notice Adjusts input values according to decimals.
-    /// @dev Used to adjust pool reserve balances and price feed answers.
-    /// @param value0 Value associated with pool token 0.
-    /// @param value1 Value associated with pool token 1.
-    /// @param decimals0 Decimals for value0.
-    /// @param decimals1 Decimals for value1.
-    /// @return Ensures the return values have the same decimal base.
-    function _adjustDecimals(
-        uint256 value0,
-        uint256 value1,
-        uint256 decimals0,
-        uint256 decimals1
+    /// @notice Calculates the LP token price for the pool given token prices, simulated balances and LP token supply.
+    /// @dev Intermediate values have 18 decimals & should accomodate different token and feed decimals.
+    /// @dev Assumes: pool LP token ERC-20 implementation uses 18 decimals.
+    /// @param token0Bal Simulated pool balance of token0.
+    /// @param token1Bal Simulated pool balance of token1.
+    /// @param price0 External USD price feed latest answer for pool token0.
+    /// @param price1 External USD price feed latest answer for pool token1.
+    /// @return LP token USD price (8 decimals).
+    function _calculatePrice(
+        uint256 token0Bal,
+        uint256 token1Bal,
+        uint256 price0,
+        uint256 price1
     )
         internal
-        pure
-        returns (uint256, uint256)
+        view
+        returns (uint256)
     {
-        if (decimals0 == decimals1) {
-            return (value0, value1);
-        } else {
-            return (value0 * (10 ** (18 - decimals0)), value1 * (10 ** (18 - decimals1)));
-        }
+        uint256 value0 = (token0Bal * price0 * 1e18) / (10 ** (TOKEN0_DECIMALS + FEED0.decimals()));
+        uint256 value1 = (token1Bal * price1 * 1e18) / (10 ** (TOKEN1_DECIMALS + FEED1.decimals()));
+        return ((value0 + value1) * 1e8) / IERC20(POOL).totalSupply();
     }
 }

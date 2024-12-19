@@ -1,0 +1,11 @@
+adjustDecimals.tsol
+├── when decimals are equal
+│   └── it should return values unchanged
+└── when decimals are not equal
+    ├── when at least one decimal is greater than 18
+    │   └── it should revert
+    └── when both decimals are less than, or equal to, 18
+        ├── when values overflow when adjusted
+        │   └── it should revert
+        └── when values can be adjusted without overflow
+            └── it should return the adjusted values with base 18 decimals

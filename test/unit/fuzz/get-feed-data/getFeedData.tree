@@ -1,0 +1,13 @@
+getFeedData.t.sol
+└── given when both feed addresses are valid Chainlink price feeds
+    ├── when at least one answer is negative
+    │   └── it should revert
+    └── when both answers are positive
+        ├── given when price feed decimals are the same
+        │   ├── it should return the answer of feed 0 casted to a uint
+        │   ├── it should return the answer of feed 1 casted to a uint
+        │   └── it should return the update timestamp of the price feed with the smallest updatedAt value
+        └── given when price feed decimals are different
+            ├── it should return the answer of feed 0 adjusted to 18 decimals and casted to a uint
+            ├── it should return the answer of feed 1 adjusted to 18 decimals and casted to a uint
+            └── it should return the update timestamp of the price feed with the smallest updatedAt value
