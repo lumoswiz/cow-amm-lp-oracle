@@ -113,4 +113,16 @@ contract BaseTest is Assertions, Calculations, Utils {
         setAllAddressDecimals(8, 8, decimals0, decimals1);
         oracle = new ExposedLPOracle(mocks.pool, address(helper), mocks.feed0, mocks.feed1);
     }
+
+    function reinitOracleAll(
+        uint8 feedDecimals0,
+        uint8 feedDecimals1,
+        uint8 token0Decimals,
+        uint8 token1Decimals
+    )
+        internal
+    {
+        setAllAddressDecimals(feedDecimals0, feedDecimals1, token0Decimals, token1Decimals);
+        oracle = new ExposedLPOracle(mocks.pool, address(helper), mocks.feed0, mocks.feed1);
+    }
 }

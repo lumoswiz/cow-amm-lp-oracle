@@ -42,4 +42,17 @@ contract ExposedLPOracle is LPOracle {
     {
         return _adjustDecimals(value0, value1, decimals0, decimals1);
     }
+
+    function exposed_calculatePrice(
+        uint256 token0Bal,
+        uint256 token1Bal,
+        uint256 price0,
+        uint256 price1
+    )
+        external
+        view
+        returns (uint256)
+    {
+        return _calculatePrice(token0Bal, token1Bal, price0, price1);
+    }
 }
