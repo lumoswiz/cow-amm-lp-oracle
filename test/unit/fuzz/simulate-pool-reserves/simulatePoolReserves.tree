@@ -1,0 +1,7 @@
+simulatePoolReserves.t.sol
+├── when token 0 is the buy token
+│   ├── it should simulate token 0 balance by incrementing the pool's current token 0 balance by the order buy amount
+│   └── it should simulate token 1 balance by decrementing the pool's current token 1 balance by the order sell amount
+└── when token 1 is the sell token
+    ├── it should simulate token 0 balance by decrementing the pool's current token 0 balance by the order sell amount
+    └── it should simulate token 1 balance by incrementing the pool's current token 1 balance by the order buy amount

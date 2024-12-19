@@ -5,7 +5,7 @@ import { console } from "forge-std/console.sol";
 import { BaseTest } from "test/Base.t.sol";
 import { GPv2Order } from "cowprotocol/contracts/libraries/GPv2Order.sol";
 
-contract SimulatePoolReserves_Unit_Test is BaseTest {
+contract SimulatePoolReserves_Concrete_Unit_Test is BaseTest {
     function test_SimulatePoolReserves_Balanced50_50Pool() external {
         setMockOrder(defaults.TOKEN0_BALANCE(), defaults.TOKEN1_BALANCE(), defaults.NORMALIZED_WEIGHT());
         GPv2Order.Data memory order = oracle.exposed_simulateOrder(1e8, 1e8);
