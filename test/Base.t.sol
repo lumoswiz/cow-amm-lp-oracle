@@ -59,18 +59,18 @@ contract BaseTest is Assertions, Calculations, Utils {
     )
         internal
     {
-        setFeedDecimals(feedDecimals0, feedDecimals1);
-        setTokenDecimals(tokenDecimals0, tokenDecimals1);
+        setFeedsAndDecimals(mocks.feed0, mocks.feed1, feedDecimals0, feedDecimals1);
+        setHelperTokensAndDecimals(tokenDecimals0, tokenDecimals1);
     }
 
-    /// @dev Helper to mock price feed decimals
-    function setFeedDecimals(uint8 decimals0, uint8 decimals1) internal {
-        mock_address_decimals(mocks.feed0, decimals0);
-        mock_address_decimals(mocks.feed1, decimals1);
+    /// @dev Helper to mock price feed decimals.
+    function setFeedsAndDecimals(address feed0, address feed1, uint8 decimals0, uint8 decimals1) internal {
+        mock_address_decimals(feed0, decimals0);
+        mock_address_decimals(feed1, decimals1);
     }
 
-    /// @dev Helper to mock BCoWHelper.tokens() call & set token decimals
-    function setTokenDecimals(uint8 decimals0, uint8 decimals1) internal {
+    /// @dev Helper to mock BCoWHelper.tokens() call & set token decimals.
+    function setHelperTokensAndDecimals(uint8 decimals0, uint8 decimals1) internal {
         // Mock helper.tokens() call
         mock_helper_tokens(address(helper), mocks.pool, mocks.token0, mocks.token1);
 
@@ -79,6 +79,7 @@ contract BaseTest is Assertions, Calculations, Utils {
         mock_address_decimals(mocks.token1, decimals1);
     }
 
+    /// @dev Helper to mock the order with specified token balances and weights.
     function setMockOrder(uint256 token0Balance, uint256 token1Balance, uint256 token0Weight) internal {
         OrderParams memory params = defaults.mockOrderParamsCustomValues(token0Balance, token1Balance, token0Weight);
         mock_helper_order(params);
@@ -86,11 +87,12 @@ contract BaseTest is Assertions, Calculations, Utils {
 
     /// @dev Helper to mock price feed data for both feeds - decimals, latestRoundData
     function setPriceFeedData(FeedParams memory params0, FeedParams memory params1) internal {
-        setFeedDecimals(params0.decimals, params1.decimals);
+        setFeedsAndDecimals(params0.addr, params1.addr, params0.decimals, params1.decimals);
         mock_feed_latestRoundData(params0.addr, params0.answer, params0.updatedAt);
         mock_feed_latestRoundData(params1.addr, params1.answer, params1.updatedAt);
     }
 
+    /// @dev Helper to set all mocks required for calls to the oracle's latestRoundData() function.
     function setLatestRoundDataMocks(
         int256 answer0,
         int256 answer1,

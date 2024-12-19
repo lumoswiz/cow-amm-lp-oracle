@@ -10,6 +10,9 @@ contract LPOracle is AggregatorV3Interface {
     /// @notice Thrown when Chainlink price feeds with more than 18 decimals are used.
     error UnsupportedDecimals();
 
+    /// @notice Thrown when a Chainlink price feed returns a negative answer.
+    error NegativeAnswer();
+
     /// @notice BCoWPool address.
     address public immutable POOL;
 
@@ -25,10 +28,10 @@ contract LPOracle is AggregatorV3Interface {
     IERC20 public immutable TOKEN1;
 
     /// @notice Pool token 0 decimals
-    uint256 public immutable TOKEN0_DECIMALS;
+    uint8 public immutable TOKEN0_DECIMALS;
 
     /// @notice Pool token 1 decimals
-    uint256 public immutable TOKEN1_DECIMALS;
+    uint8 public immutable TOKEN1_DECIMALS;
 
     /// @notice Chainlink USD price for pool token 0
     AggregatorV3Interface public immutable FEED0;
@@ -129,6 +132,9 @@ contract LPOracle is AggregatorV3Interface {
         (, int256 answer0,, uint256 updatedAt0,) = FEED0.latestRoundData();
         (, int256 answer1,, uint256 updatedAt1,) = FEED1.latestRoundData();
 
+        /* Handle negative answers */
+        if (answer0 < 0 || answer1 < 0) revert NegativeAnswer();
+
         /* Adjust answers for price feed decimals */
         (uint256 price0, uint256 price1) =
             _adjustDecimals(uint256(answer0), uint256(answer1), FEED0.decimals(), FEED1.decimals());
@@ -149,8 +155,8 @@ contract LPOracle is AggregatorV3Interface {
     function _adjustDecimals(
         uint256 value0,
         uint256 value1,
-        uint256 decimals0,
-        uint256 decimals1
+        uint8 decimals0,
+        uint8 decimals1
     )
         internal
         pure

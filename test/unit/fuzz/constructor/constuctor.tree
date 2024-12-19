@@ -1,0 +1,19 @@
+constructor.t.sol
+# when at least one decimal call to a feed address fails
+## it should revert
+# when both decimal calls to the feed addresses succeed
+## given when at least one feed address returns a decimal value greater than 18
+### it should revert
+## given when both feed addresses return decimals less than, or equal to, 18
+### given when the helper tokens call fails
+#### it should revert
+### given when the helper tokens call succeeds
+#### given when the pool is a two token pool
+##### it should set the price feed of the pool's underlying token 0
+##### it should set the price feed of the pool's underlying token 1
+##### it should set the pool
+##### it should set the helper
+##### it should set the pool's underlying token 0
+##### it should set the pool's underlying token 1
+##### it should set the decimals of token 0
+##### it should set the decimals of token 1
