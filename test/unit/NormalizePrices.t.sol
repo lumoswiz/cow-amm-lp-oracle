@@ -2,6 +2,7 @@
 pragma solidity 0.8.25;
 
 import { BaseTest } from "test/Base.t.sol";
+import { ExposedLPOracle } from "test/harness/ExposedLPOracle.sol";
 
 contract NormalizePrices_Unit_Test is BaseTest {
     function test_normalizePrices() public view {
@@ -59,5 +60,15 @@ contract NormalizePrices_Unit_Test is BaseTest {
             1e16, // 1% tolerance
             "Relative price calculation incorrect"
         );
+    }
+
+    /*----------------------------------------------------------*|
+    |*  # HELPERS                                               *|
+    |*----------------------------------------------------------*/
+
+    /// @dev Helper to reinitialize oracle after changing decimals
+    function reinitOracle(uint8 decimals0, uint8 decimals1) internal {
+        setAllAddressDecimals(8, 8, decimals0, decimals1);
+        oracle = new ExposedLPOracle(mocks.pool, address(helper), mocks.feed0, mocks.feed1);
     }
 }
