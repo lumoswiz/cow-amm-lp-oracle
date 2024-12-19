@@ -1,1 +1,5 @@
 simulateOrder.t.sol
+├── given when at least one token prices is zero
+│   └── it should revert
+└── given when both prices are greater than zero
+    └── it should return a Gnosis Protocol order

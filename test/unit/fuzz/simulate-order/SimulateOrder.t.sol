@@ -5,70 +5,66 @@ import { BaseTest } from "test/Base.t.sol";
 import { GPv2Order } from "cowprotocol/contracts/libraries/GPv2Order.sol";
 
 contract SimulateOrder_Unit_Test is BaseTest {
-    function test_ShouldRevert_ZeroPrice0() external {
-        uint256 price0 = 0;
-        uint256 price1 = 1e8;
-
+    function testFuzz_ShouldRevert_ZeroPrice0(uint256 price1) external {
         vm.expectRevert();
-        oracle.exposed_simulateOrder(price0, price1);
+        oracle.exposed_simulateOrder(0, price1);
     }
 
-    function test_ShouldRevert_ZeroPrice1() external {
-        uint256 price0 = 1e18;
-        uint256 price1 = 0;
-
+    function testFuzz_ShouldRevert_ZeroPrice1(uint256 price0) external {
         vm.expectRevert();
-        oracle.exposed_simulateOrder(price0, price1);
+        oracle.exposed_simulateOrder(price0, 0);
     }
 
     modifier whenNonZeroPrices() {
         _;
     }
 
-    function test_SimulateOrder_ImbalancedPool() external whenNonZeroPrices {
-        // Set pool reserves (50:50 containing 15 and 3000 tokens)
-        // This test is analogous to an imbalanced ETH/USDC pool with ETH at 300 and USDC at 1.
-        // The pool has too much ETH!
-        uint256 token0PoolReserve = 15e18; // 15 ETH
-        uint256 token1PoolReserve = 3000e18; // 3000 USDC
-        // Set prices
-        uint256 price0 = 300e8; // 300 USD/ETH
-        uint256 price1 = 1e8; // 1 USD/USDC
+    function testFuzz_BalancedPool_50_50_EqualPricesAndBalances(
+        uint256 price,
+        uint256 reserve
+    )
+        external
+        whenNonZeroPrices
+    {
+        // Tokens have same price and balances in pool
+        price = bound(price, 1e8, 1e16);
+        reserve = bound(reserve, 1e18, 1e30);
 
-        // set mock order
-        setMockOrder(token0PoolReserve, token1PoolReserve, 0.5e18);
-        GPv2Order.Data memory order = oracle.exposed_simulateOrder(price0, price1);
-        // Pool needs to sell off token0.
-        assertEq(mocks.token0, address(order.sellToken));
-        // Pool needs to buy token1.
-        assertEq(mocks.token1, address(order.buyToken));
+        // Set mock order
+        setMockOrder(reserve, reserve, defaults.WEIGHT_50());
+
+        // Simulate order
+        GPv2Order.Data memory order = oracle.exposed_simulateOrder(price, price);
+
+        // Assertions
+        assertEq(order.buyAmount, 0, "order.buyAmount");
+        assertEq(order.sellAmount, 0, "order.sellAmount");
     }
 
-    function test_SimulateOrder_Balanced50_50Pool() external whenNonZeroPrices {
-        uint256 token0PoolReserve = 10e18;
-        uint256 token1PoolReserve = 10e18;
-        // Set prices
-        uint256 price0 = 1e8;
-        uint256 price1 = 1e8;
+    function testFuzz_ImbalancedPool_50_50_MoreToken1(
+        uint256 price0,
+        uint256 price1,
+        uint256 token0Bal,
+        uint256 token1Bal
+    )
+        external
+    {
+        price0 = bound(price0, 1e6, 1e9);
+        price1 = bound(price1, 1e9, 1e14);
+        token0Bal = bound(token0Bal, 1e22, 1e28);
+        token1Bal = bound(token1Bal, 1e16, 1e20);
+        vm.assume(price0 * token0Bal > price1 * token1Bal);
 
-        // set mock order for 50:50 pool
-        setMockOrder(token0PoolReserve, token1PoolReserve, 0.5e18);
+        // Set mock order
+        setMockOrder(token0Bal, token1Bal, 0.5e18);
+
+        // Simulate order
         GPv2Order.Data memory order = oracle.exposed_simulateOrder(price0, price1);
-        // Pool does not need to rebalance.
-        assertEq(order.sellAmount, 0);
-        assertEq(order.buyAmount, 0);
-    }
 
-    function test_SimulateOrder_Balanced10_90Pool() external whenNonZeroPrices {
-        uint256 token0PoolReserve = 10e18;
-        uint256 token1PoolReserve = 90e18;
-
-        // set mock order for 10:90 pool
-        setMockOrder(token0PoolReserve, token1PoolReserve, 0.1e18);
-        // Same Prices: 1e8
-        GPv2Order.Data memory order = oracle.exposed_simulateOrder(1e8, 1e8);
-        // Pool does not need to rebalance.
-        assertEq(order.sellAmount, 0);
-        assertEq(order.buyAmount, 0);
+        // Assertions
+        assertEq(address(order.buyToken), mocks.token1, "order.buyToken");
+        assertEq(address(order.sellToken), mocks.token0, "order.sellToken");
+        assertGt(order.buyAmount, 0);
+        assertGt(order.sellAmount, 0);
     }
 }
