@@ -1,0 +1,8 @@
+normalizePrices.t.sol
+├── when price of token 0 is zero
+│   └── it should revert
+└── when price of token 0 is greater than zero
+    ├── when the calculation overflows
+    │   └── it should revert
+    └── when the calculation does not overflow
+        └── it should return a prices vector with a normalized first element and a second element expressed in terms of the first
