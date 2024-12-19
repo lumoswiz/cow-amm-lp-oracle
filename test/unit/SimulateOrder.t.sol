@@ -39,9 +39,9 @@ contract SimulateOrder_Unit_Test is BaseTest {
         setMockOrder(token0PoolReserve, token1PoolReserve, 0.5e18);
         GPv2Order.Data memory order = oracle.exposed_simulateOrder(price0, price1);
         // Pool needs to sell off token0.
-        assertEq(TOKEN0, address(order.sellToken));
+        assertEq(mocks.token0, address(order.sellToken));
         // Pool needs to buy token1.
-        assertEq(TOKEN1, address(order.buyToken));
+        assertEq(mocks.token1, address(order.buyToken));
     }
 
     function test_SimulateOrder_Balanced50_50Pool() external whenNonZeroPrices {
