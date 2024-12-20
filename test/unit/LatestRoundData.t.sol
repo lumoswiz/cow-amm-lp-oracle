@@ -213,4 +213,22 @@ contract LatestRoundData_Unit_Test is BaseTest {
         // LP token price is within 0.1% of the balance pool price.
         assertApproxEqRel(uint256(answer), 5e8, 1e15);
     }
+
+    function test_BalancedPool_EqualTokenDecimals() external {
+        uint256 token0PoolReserve = 1e6;
+        uint256 token1PoolReserve = 4000e6;
+
+        // Reinit the oracle to set token decimals to 6 instead of 18
+        reinitOracle(6, 6);
+
+        setLatestRoundDataMocks(
+            defaults.ANSWER0(), defaults.ANSWER1(), token0PoolReserve, token1PoolReserve, defaults.WEIGHT_50()
+        );
+
+        (, int256 answer,,,) = oracle.latestRoundData();
+
+        // Implemented assertions
+        // Expected LP token USD price = (1 * 4000 + 4000 * 1) / 1000 = $8/token === 8e8
+        assertEq(answer, 8e8, "answer");
+    }
 }

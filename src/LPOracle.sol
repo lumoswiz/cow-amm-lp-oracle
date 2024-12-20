@@ -111,7 +111,7 @@ contract LPOracle is AggregatorV3Interface {
         (uint256 token0Bal, uint256 token1Bal) = _simulatePoolReserves(order);
 
         /* Determine LP token price */
-        uint256 lpPrice = (token0Bal * price0 + token1Bal * price1) / IERC20(POOL).totalSupply();
+        uint256 lpPrice = _calculatePrice(token0Bal, token1Bal, price0, price1);
 
         return (0, int256(lpPrice), 0, updatedAt_, 0);
     }
@@ -163,16 +163,16 @@ contract LPOracle is AggregatorV3Interface {
     /// @notice Retrieves the simulated pool reserves post rebalancing trade.
     /// @dev Adjusts the reserve balances for decimal differences to prepare for LP token price computation.
     /// @param order The simulated rebalancing trade order.
-    /// @return token0Bal Simulated pool balance of token 0.
-    /// @return token1Bal Simulated pool balance of token 1.
+    /// @return balance0 Simulated pool balance of token 0.
+    /// @return balance1 Simulated pool balance of token 1.
     function _simulatePoolReserves(GPv2Order.Data memory order)
         internal
         view
-        returns (uint256 token0Bal, uint256 token1Bal)
+        returns (uint256 balance0, uint256 balance1)
     {
         /* Get current pool token balances */
-        uint256 balance0 = TOKEN0.balanceOf(POOL);
-        uint256 balance1 = TOKEN1.balanceOf(POOL);
+        balance0 = TOKEN0.balanceOf(POOL);
+        balance1 = TOKEN1.balanceOf(POOL);
 
         /* Determine post rebalancing trade pool token balances */
         if (TOKEN0 == order.buyToken) {
@@ -182,9 +182,6 @@ contract LPOracle is AggregatorV3Interface {
             balance0 -= order.sellAmount;
             balance1 += order.buyAmount;
         }
-
-        /* Adjust for decimals */
-        (token0Bal, token1Bal) = _adjustDecimals(balance0, balance1, TOKEN0_DECIMALS, TOKEN1_DECIMALS);
     }
 
     /// @notice Adjusts input values according to decimals.
@@ -209,5 +206,28 @@ contract LPOracle is AggregatorV3Interface {
         } else {
             return (value0 * (10 ** (18 - decimals0)), value1 * (10 ** (18 - decimals1)));
         }
+    }
+
+    /// @notice Calculates the LP token price for the pool given token prices, simulated balances and LP token supply.
+    /// @dev Intermediate values have 18 decimals & should accomodate different token and feed decimals.
+    /// @dev Assumes: pool LP token ERC-20 implementation uses 18 decimals.
+    /// @param token0Bal Simulated pool balance of token0.
+    /// @param token1Bal Simulated pool balance of token1.
+    /// @param price0 External USD price feed latest answer for pool token0.
+    /// @param price1 External USD price feed latest answer for pool token1.
+    /// @return LP token USD price (8 decimals).
+    function _calculatePrice(
+        uint256 token0Bal,
+        uint256 token1Bal,
+        uint256 price0,
+        uint256 price1
+    )
+        internal
+        view
+        returns (uint256)
+    {
+        uint256 value0 = (token0Bal * price0 * 1e18) / (10 ** (TOKEN0_DECIMALS + FEED0.decimals()));
+        uint256 value1 = (token1Bal * price1 * 1e18) / (10 ** (TOKEN1_DECIMALS + FEED1.decimals()));
+        return ((value0 + value1) * 1e8) / IERC20(POOL).totalSupply();
     }
 }
