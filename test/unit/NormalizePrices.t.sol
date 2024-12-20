@@ -61,14 +61,4 @@ contract NormalizePrices_Unit_Test is BaseTest {
             "Relative price calculation incorrect"
         );
     }
-
-    /*----------------------------------------------------------*|
-    |*  # HELPERS                                               *|
-    |*----------------------------------------------------------*/
-
-    /// @dev Helper to reinitialize oracle after changing decimals
-    function reinitOracle(uint8 decimals0, uint8 decimals1) internal {
-        setAllAddressDecimals(8, 8, decimals0, decimals1);
-        oracle = new ExposedLPOracle(mocks.pool, address(helper), mocks.feed0, mocks.feed1);
-    }
 }

@@ -105,4 +105,10 @@ contract BaseTest is Assertions, Calculations, Utils {
         setMockOrder(token0Balance, token1Balance, token0Weight);
         mock_pool_totalSupply(mocks.pool, defaults.LP_TOKEN_SUPPLY());
     }
+
+    /// @dev Helper to reinitialize oracle after changing decimals
+    function reinitOracle(uint8 decimals0, uint8 decimals1) internal {
+        setAllAddressDecimals(8, 8, decimals0, decimals1);
+        oracle = new ExposedLPOracle(mocks.pool, address(helper), mocks.feed0, mocks.feed1);
+    }
 }
