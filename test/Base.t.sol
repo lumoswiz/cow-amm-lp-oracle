@@ -40,6 +40,11 @@ contract BaseTest is Assertions, Calculations, Utils {
         // Setup default decimal configs: feeds -> 8, tokens -> 18
         setAllAddressDecimals(8, 8, 18, 18);
 
+        // Additional requirement to deploy the 'hybrid' oracle
+        // Mock the normalized weights 50/50 pool
+        mock_pool_getNormalizedWeight(mocks.pool, mocks.token0, defaults.WEIGHT_50());
+        mock_pool_getNormalizedWeight(mocks.pool, mocks.token1, defaults.WEIGHT_50());
+
         // Initialize oracle with default configuration
         oracle = new ExposedLPOracle(mocks.pool, address(helper), mocks.feed0, mocks.feed1);
         vm.label(address(oracle), "ExposedLPOracle");
@@ -72,7 +77,10 @@ contract BaseTest is Assertions, Calculations, Utils {
     /// @dev Helper to mock BCoWHelper.tokens() call & set token decimals
     function setTokenDecimals(uint8 decimals0, uint8 decimals1) internal {
         // Mock helper.tokens() call
-        mock_helper_tokens(address(helper), mocks.pool, mocks.token0, mocks.token1);
+        // mock_helper_tokens(address(helper), mocks.pool, mocks.token0, mocks.token1);
+
+        // @note Temporarily use this instead while we test the latestRoundData versions
+        mock_pool_getFinalTokens(mocks.pool, mocks.token0, mocks.token1);
 
         // Mock decimals() calls for both tokens
         mock_address_decimals(mocks.token0, decimals0);

@@ -6,7 +6,14 @@ import { AggregatorV3Interface } from "@cow-amm/interfaces/AggregatorV3Interface
 import { IERC20 } from "cowprotocol/contracts/interfaces/IERC20.sol";
 import { GPv2Order } from "cowprotocol/contracts/libraries/GPv2Order.sol";
 
+// Added for V2
+import { IBCoWPool } from "@balancer/cow-amm/src/interfaces/IBCoWPool.sol";
+import { FixedPointMathLib } from "solady/utils/FixedPointMathLib.sol";
+
 contract LPOracle is AggregatorV3Interface {
+    using FixedPointMathLib for uint256;
+    using FixedPointMathLib for int256;
+
     /// @notice Thrown when Chainlink price feeds with more than 18 decimals are used.
     error UnsupportedDecimals();
 
@@ -30,6 +37,13 @@ contract LPOracle is AggregatorV3Interface {
     /// @notice Pool token 1 decimals
     uint256 public immutable TOKEN1_DECIMALS;
 
+    /// @notice Pool token 0 normalized weight
+    /// @dev Used as int256
+    uint256 public immutable WEIGHT0;
+
+    /// @notice Pool token 1 normalized weight
+    uint256 public immutable WEIGHT1;
+
     /// @notice Chainlink USD price for pool token 0
     AggregatorV3Interface public immutable FEED0;
 
@@ -52,12 +66,16 @@ contract LPOracle is AggregatorV3Interface {
         HELPER = ICOWAMMPoolHelper(_helper);
 
         /* Gets pool tokens with correct ordering and pool validation checks */
-        address[] memory tokens = HELPER.tokens(POOL);
+        address[] memory tokens = IBCoWPool(POOL).getFinalTokens();
         TOKEN0 = IERC20(tokens[0]);
         TOKEN1 = IERC20(tokens[1]);
 
         TOKEN0_DECIMALS = TOKEN0.decimals();
         TOKEN1_DECIMALS = TOKEN1.decimals();
+
+        /* Add pool token normalized weights */
+        WEIGHT0 = IBCoWPool(POOL).getNormalizedWeight(tokens[0]);
+        WEIGHT1 = IBCoWPool(POOL).getNormalizedWeight(tokens[1]);
     }
 
     /*----------------------------------------------------------*|
@@ -114,6 +132,51 @@ contract LPOracle is AggregatorV3Interface {
         uint256 lpPrice = _calculatePrice(token0Bal, token1Bal, price0, price1);
 
         return (0, int256(lpPrice), 0, updatedAt_, 0);
+    }
+
+    function latestRoundDataV2()
+        external
+        view
+        returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
+    {
+        /* Get the price feed data */
+        (uint256 price0, uint256 price1, uint256 updatedAt_) = _getFeedData();
+
+        /* Simulate pool reserves with pool AMM math */
+        (uint256 token0Bal, uint256 token1Bal) = _simulatePoolReservesV2(price0, price1);
+
+        /* Determine LP token price */
+        uint256 lpPrice = _calculatePrice(token0Bal, token1Bal, price0, price1);
+
+        return (0, int256(lpPrice), 0, updatedAt_, 0);
+    }
+
+    function _simulatePoolReservesV2(
+        uint256 price0,
+        uint256 price1
+    )
+        internal
+        view
+        returns (uint256 simBal0, uint256 simBal1)
+    {
+        /* Get pool k value */
+        uint256 k = _getKValue();
+
+        /* Calculate simulated token 0 reserves */
+        uint256 x_num = price1.mulWad(WEIGHT0);
+        uint256 x_den = price0.mulWad(WEIGHT1);
+        simBal0 = k.mulWad(uint256(int256(x_num.divWad(x_den)).powWad(int256(WEIGHT1))));
+
+        /* Calculate simulated token 0 reserves */
+        uint256 y_num = price0.mulWad(WEIGHT1);
+        uint256 y_den = price1.mulWad(WEIGHT0);
+        simBal1 = k.mulWad(uint256(int256(y_num.divWad(y_den)).powWad(int256(WEIGHT0))));
+    }
+
+    function _getKValue() internal view returns (uint256 k) {
+        uint256 balance0 = TOKEN0.balanceOf(POOL);
+        uint256 balance1 = TOKEN1.balanceOf(POOL);
+        return uint256(int256(balance0.divWad(balance1)).powWad(int256(WEIGHT0))).mulWad(balance1);
     }
 
     /*----------------------------------------------------------*|

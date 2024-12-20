@@ -7,7 +7,8 @@
     "url": "https://github.com/lumoswiz"
   },
   "dependencies": {
-    "@balancer/cow-amm": "lumoswiz/cow-amm#main"
+    "@balancer/cow-amm": "lumoswiz/cow-amm#main",
+    "solady": "^0.0.286"
   },
   "devDependencies": {
     "forge-std": "github:foundry-rs/forge-std#v1.8.1",
