@@ -1,5 +1,6 @@
 forge-std/=node_modules/forge-std/src/
 solady/=node_modules/solady/src/
+solmate/=node_modules/solmate/src/
 cowprotocol/=node_modules/@cowprotocol/contracts/src/
 @cowprotocol/=node_modules/@cowprotocol/contracts/src/contracts/
 @balancer/cow-amm/=node_modules/@balancer/cow-amm/

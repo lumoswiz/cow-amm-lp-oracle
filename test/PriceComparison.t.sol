@@ -25,11 +25,21 @@ contract PriceComparisonTest is BaseTest {
         assertApproxEqRel(uint256(answer), 6e8, 1e15); // within 0.1%
     }
 
-    // gas: 28516 - Approx 40% savings.
-    function test_latestRoundDataV2() external {
+    // gas: 28513- Approx 40% savings.
+    function test_latestRoundDataSolady() external {
         uint256 startGas = gasleft();
-        (, int256 answer,,,) = oracle.latestRoundDataV2();
-        emit log_named_uint("v2 gas", startGas - gasleft());
+        (, int256 answer,,,) = oracle.latestRoundDataSolady();
+        emit log_named_uint("solady gas", startGas - gasleft());
         assertApproxEqRel(uint256(answer), 6e8, 1e15); // within 0.1%
+    }
+
+    // gas: 28998.
+    // Lots of int256 casting in this implementation. We can avoid this by saving WEIGHT values as int's,
+    // & we don't have to cast chainlink price feed answers to uint256.
+    function test_latestRoundDataSolmate() external {
+        uint256 startGas = gasleft();
+        (, int256 answer,,,) = oracle.latestRoundDataSolmate();
+        emit log_named_uint("solmate gas", startGas - gasleft());
+        assertApproxEqRel(uint256(answer), 6e8, 1e15); // within 0.1
     }
 }
