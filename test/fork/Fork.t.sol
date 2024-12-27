@@ -16,7 +16,6 @@ contract ForkTest is Addresses, Assertions, Test {
     LPOracle internal oracle;
     LPOracleFactory internal factory;
 
-    ICOWAMMPoolHelper internal immutable FORK_HELPER;
     IERC20 internal immutable FORK_POOL;
     IERC20 internal immutable FORK_TOKEN0;
     IERC20 internal immutable FORK_TOKEN1;
@@ -27,10 +26,9 @@ contract ForkTest is Addresses, Assertions, Test {
         FORK_TOKEN0 = IERC20(_token0);
         FORK_TOKEN1 = IERC20(_token1);
 
-        (address _pool, address _helper, address _feed0, address _feed1) = getOracleConstructorArgs(_token0, _token1);
+        (address _pool, address _feed0, address _feed1) = getOracleConstructorArgs(_token0, _token1);
 
         FORK_POOL = IERC20(_pool);
-        FORK_HELPER = ICOWAMMPoolHelper(_helper);
         FORK_FEED0 = AggregatorV3Interface(_feed0);
         FORK_FEED1 = AggregatorV3Interface(_feed1);
     }
@@ -41,7 +39,7 @@ contract ForkTest is Addresses, Assertions, Test {
         vm.createSelectFork({ blockNumber: 21_422_754, urlOrAlias: "mainnet" });
 
         // Deploy contracts to the fork.
-        factory = new LPOracleFactory(address(FORK_HELPER));
+        factory = new LPOracleFactory();
         oracle = LPOracle(factory.deployOracle(address(FORK_POOL), address(FORK_FEED0), address(FORK_FEED1)));
 
         // Label contracts.
@@ -51,7 +49,6 @@ contract ForkTest is Addresses, Assertions, Test {
     function labelContracts() internal {
         vm.label(address(factory), "FACTORY");
         vm.label(address(oracle), "ORACLE");
-        vm.label(address(FORK_HELPER), "HELPER");
         vm.label(address(FORK_POOL), "POOL");
         vm.label(address(FORK_TOKEN0), "TOKEN0");
         vm.label(address(FORK_TOKEN1), "TOKEN1");
