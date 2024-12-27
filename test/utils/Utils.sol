@@ -72,18 +72,4 @@ contract Utils is Test {
     function mock_pool_totalSupply(address pool, uint256 supply) internal {
         vm.mockCall(pool, abi.encodeWithSignature("totalSupply()"), abi.encode(supply));
     }
-
-    /*----------------------------------------------------------*|
-    |*  # MOCK CALLS: BCoWFactory                               *|
-    |*----------------------------------------------------------*/
-
-    /// @dev Helper to mock the `APP_DATA` in the factory contract, required to deploy MockBCoWHelper.
-    function mock_factory_APP_DATA(address factory, bytes32 data) internal {
-        vm.mockCall(factory, abi.encodeWithSignature("APP_DATA()"), abi.encode(data));
-    }
-
-    /// @dev Helper to mock the factory.isBPool call, required to mock the order.
-    function mock_factory_isBPool(address factory, address pool) internal {
-        vm.mockCall(factory, abi.encodeWithSignature("isBPool(address)", pool), abi.encode(true));
-    }
 }
