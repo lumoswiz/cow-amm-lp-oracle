@@ -9,9 +9,7 @@ contract LatestRoundData_Unit_Test is BaseTest {
     function testFuzz_shouldRevert_LtEqZeroAnswer0(int256 answer0) external {
         vm.assume(answer0 < 0);
 
-        setLatestRoundDataMocks(
-            answer0, defaults.ANSWER1(), defaults.TOKEN0_BALANCE(), defaults.TOKEN1_BALANCE(), defaults.WEIGHT_50()
-        );
+        setLatestRoundDataMocks(answer0, defaults.ANSWER1(), defaults.TOKEN0_BALANCE(), defaults.TOKEN1_BALANCE());
 
         vm.expectRevert();
         oracle.latestRoundData();
@@ -20,9 +18,7 @@ contract LatestRoundData_Unit_Test is BaseTest {
     function testFuzz_shouldRevert_LtEqZeroAnswer1(int256 answer1) external {
         vm.assume(answer1 < 0);
 
-        setLatestRoundDataMocks(
-            defaults.ANSWER0(), answer1, defaults.TOKEN0_BALANCE(), defaults.TOKEN1_BALANCE(), defaults.WEIGHT_50()
-        );
+        setLatestRoundDataMocks(defaults.ANSWER0(), answer1, defaults.TOKEN0_BALANCE(), defaults.TOKEN1_BALANCE());
 
         vm.expectRevert();
         oracle.latestRoundData();
@@ -40,9 +36,7 @@ contract LatestRoundData_Unit_Test is BaseTest {
         uint256 token0PoolReserve = 1e18;
         uint256 token1PoolReserve = 4000e18;
 
-        setLatestRoundDataMocks(
-            defaults.ANSWER0(), defaults.ANSWER1(), token0PoolReserve, token1PoolReserve, defaults.WEIGHT_50()
-        );
+        setLatestRoundDataMocks(defaults.ANSWER0(), defaults.ANSWER1(), token0PoolReserve, token1PoolReserve);
 
         (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =
             oracle.latestRoundData();
@@ -62,9 +56,7 @@ contract LatestRoundData_Unit_Test is BaseTest {
         uint256 token0PoolReserve = 1e18;
         uint256 token1PoolReserve = 1000e18;
 
-        setLatestRoundDataMocks(
-            defaults.ANSWER0(), defaults.ANSWER1(), token0PoolReserve, token1PoolReserve, defaults.WEIGHT_80()
-        );
+        setLatestRoundDataMocks(defaults.ANSWER0(), defaults.ANSWER1(), token0PoolReserve, token1PoolReserve);
 
         (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =
             oracle.latestRoundData();
@@ -89,9 +81,7 @@ contract LatestRoundData_Unit_Test is BaseTest {
         uint256 token0PoolReserve = 1e18;
         uint256 token1PoolReserve = 4000e18;
 
-        setLatestRoundDataMocks(
-            defaults.ANSWER0(), defaults.ANSWER1(), token0PoolReserve, token1PoolReserve, defaults.WEIGHT_50()
-        );
+        setLatestRoundDataMocks(defaults.ANSWER0(), defaults.ANSWER1(), token0PoolReserve, token1PoolReserve);
 
         // Next pool state: attacker unbalances the pool
         // Assume: zero swap fees. Out token is token0.
@@ -123,9 +113,7 @@ contract LatestRoundData_Unit_Test is BaseTest {
         uint256 token0PoolReserve = 1e18;
         uint256 token1PoolReserve = 4000e18;
 
-        setLatestRoundDataMocks(
-            defaults.ANSWER0(), defaults.ANSWER1(), token0PoolReserve, token1PoolReserve, defaults.WEIGHT_50()
-        );
+        setLatestRoundDataMocks(defaults.ANSWER0(), defaults.ANSWER1(), token0PoolReserve, token1PoolReserve);
 
         // Next pool state: attacker unbalances the pool
         // Assume: zero swap fees. Out token is token1.
@@ -158,9 +146,7 @@ contract LatestRoundData_Unit_Test is BaseTest {
         uint256 token0PoolReserve = 1e18;
         uint256 token1PoolReserve = 1000e18;
 
-        setLatestRoundDataMocks(
-            defaults.ANSWER0(), defaults.ANSWER1(), token0PoolReserve, token1PoolReserve, defaults.WEIGHT_80()
-        );
+        setLatestRoundDataMocks(defaults.ANSWER0(), defaults.ANSWER1(), token0PoolReserve, token1PoolReserve);
 
         // Next pool state: attacker unbalances the pool
         // Assume: zero swap fees. Out token is token0.
@@ -192,9 +178,7 @@ contract LatestRoundData_Unit_Test is BaseTest {
         uint256 token0PoolReserve = 1e18;
         uint256 token1PoolReserve = 1000e18;
 
-        setLatestRoundDataMocks(
-            defaults.ANSWER0(), defaults.ANSWER1(), token0PoolReserve, token1PoolReserve, defaults.WEIGHT_80()
-        );
+        setLatestRoundDataMocks(defaults.ANSWER0(), defaults.ANSWER1(), token0PoolReserve, token1PoolReserve);
 
         uint256 tokenAmountOut = maxAmountOutGivenBalanceOut(1000e18);
         uint256 tokenAmountIn = calcInGivenOut(1e18, 0.8e18, 1000e18, 0.2e18, tokenAmountOut, 0);
@@ -221,9 +205,7 @@ contract LatestRoundData_Unit_Test is BaseTest {
         // Reinit the oracle to set token decimals to 6 instead of 18
         reinitOracle(6, 6);
 
-        setLatestRoundDataMocks(
-            defaults.ANSWER0(), defaults.ANSWER1(), token0PoolReserve, token1PoolReserve, defaults.WEIGHT_50()
-        );
+        setLatestRoundDataMocks(defaults.ANSWER0(), defaults.ANSWER1(), token0PoolReserve, token1PoolReserve);
 
         (, int256 answer,,,) = oracle.latestRoundData();
 
