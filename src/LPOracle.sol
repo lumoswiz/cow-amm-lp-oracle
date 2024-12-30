@@ -166,7 +166,7 @@ contract LPOracle is AggregatorV3Interface {
     /// @notice Simulates the token balances for a 2 token weighted BCoWPool.
     /// @dev Assumes zero fees & post rebalancing trade.
     /// @param price0 Chainlink USD price for token 0.
-    /// @param price1 Chainl USD price for token 1.
+    /// @param price1 Chainlink USD price for token 1.
     /// @return simBal0 Simulated balance for token 0.
     /// @return simBal1 Simulated balance for token 1.
     function _simulatePoolReserves(
@@ -185,12 +185,12 @@ contract LPOracle is AggregatorV3Interface {
         /* Calculate simulated token 0 reserves */
         int256 x_num = wadMul(int256(price1), WEIGHT0);
         int256 x_den = wadMul(int256(price0), WEIGHT1);
-        simBal0 = uint256(wadMul(k, wadPow(wadDiv(x_num, x_den), WEIGHT0)));
+        simBal0 = uint256(wadMul(k, wadPow(wadDiv(x_num, x_den), WEIGHT1)));
 
         /* Calculate simulated token 1 reserves */
         int256 y_num = wadMul(int256(price0), WEIGHT1);
         int256 y_den = wadMul(int256(price1), WEIGHT0);
-        simBal1 = uint256(wadMul(k, wadPow(wadDiv(y_num, y_den), WEIGHT1)));
+        simBal1 = uint256(wadMul(k, wadPow(wadDiv(y_num, y_den), WEIGHT0)));
     }
 
     /// @notice Calculates the LP token price for the pool given token prices, simulated balances and LP token supply.

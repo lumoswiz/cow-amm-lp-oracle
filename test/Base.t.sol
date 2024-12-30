@@ -120,4 +120,10 @@ contract BaseTest is Assertions, Calculations, Utils {
         setAllAddressDecimals(8, 8, decimals0, decimals1);
         oracle = new ExposedLPOracle(mocks.pool, mocks.feed0, mocks.feed1);
     }
+
+    /// @dev Helper to reinitialize oracle with new token-related constructor args
+    function reinitOracleTokenArgs(uint8 token0Decimals, uint8 token1Decimals, uint256 token0Weight) internal {
+        setOracleConstructorMockCalls(8, 8, token0Decimals, token1Decimals, token0Weight);
+        oracle = new ExposedLPOracle(mocks.pool, mocks.feed0, mocks.feed1);
+    }
 }
