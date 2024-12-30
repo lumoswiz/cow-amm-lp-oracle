@@ -38,6 +38,6 @@ contract ExposedLPOracle is LPOracle {
         view
         returns (uint256)
     {
-        _calculatePrice(token0Bal, token1Bal, price0, price1);
+        return _calculatePrice(token0Bal, token1Bal, price0, price1);
     }
 }

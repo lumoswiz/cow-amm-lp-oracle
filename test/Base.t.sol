@@ -95,8 +95,7 @@ contract BaseTest is Assertions, Calculations, Utils {
     {
         (FeedParams memory feedParams0, FeedParams memory feedParams1) = defaults.mockFeedParams(answer0, answer1);
         setPriceFeedData(feedParams0, feedParams1);
-        mock_token_balanceOf(mocks.token0, mocks.pool, token0Balance);
-        mock_token_balanceOf(mocks.token1, mocks.pool, token1Balance);
+        setTokenBalances(token0Balance, token1Balance);
         mock_pool_totalSupply(mocks.pool, defaults.LP_TOKEN_SUPPLY());
     }
 

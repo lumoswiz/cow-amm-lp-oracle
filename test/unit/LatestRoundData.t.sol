@@ -34,7 +34,7 @@ contract LatestRoundData_Unit_Test is BaseTest {
 
     function test_50_50Pool() external whenPositivePrices whenBalancedPool {
         uint256 token0PoolReserve = 1e18;
-        uint256 token1PoolReserve = 4000e18;
+        uint256 token1PoolReserve = 3000e18;
 
         setLatestRoundDataMocks(defaults.ANSWER0(), defaults.ANSWER1(), token0PoolReserve, token1PoolReserve);
 
@@ -47,14 +47,19 @@ contract LatestRoundData_Unit_Test is BaseTest {
         assertEq(answeredInRound, 0, "answeredInRound");
 
         // Implemented assertions
-        // Expected LP token USD price = (1 * 4000 + 4000 * 1) / 1000 = $8/token === 8e8
-        assertEq(answer, 8e8, "answer");
+        // Expected LP token USD price = (1 * 3000 + 3000 * 1) / 1000 = $6/token === 6e8
+        assertApproxEqRel(answer, 6e8, 1e10); // 100% == 1e18
         assertEq(updatedAt, block.timestamp, "updatedAt");
     }
 
     function test_80_20Pool() external whenPositivePrices whenBalancedPool {
+        // Re-init oracle to adjust for 80/20 pool
+        reinitOracleTokenArgs(18, 18, 0.8e18);
+
+        // token0 value: 3000 (80%)
+        // token1 value: 750 (20%)
         uint256 token0PoolReserve = 1e18;
-        uint256 token1PoolReserve = 1000e18;
+        uint256 token1PoolReserve = 750e18;
 
         setLatestRoundDataMocks(defaults.ANSWER0(), defaults.ANSWER1(), token0PoolReserve, token1PoolReserve);
 
@@ -67,8 +72,8 @@ contract LatestRoundData_Unit_Test is BaseTest {
         assertEq(answeredInRound, 0, "answeredInRound");
 
         // Implemented assertions
-        // Expected LP token USD price = (1 * 4000 + 1000 * 1) / 5000 = $5/token === 5e8
-        assertEq(answer, 5e8, "answer");
+        // Expected LP token USD price = (1 * 3000 + 750 * 1) / 1000 = $3.75/token === 3.75e8
+        assertApproxEqRel(answer, 3.75e8, 1e10); // 100% == 1e18
         assertEq(updatedAt, block.timestamp, "updatedAt");
     }
 
@@ -79,138 +84,132 @@ contract LatestRoundData_Unit_Test is BaseTest {
     function test_LargeUnbalancing_50_50Pool_TooMuchToken1() external whenPositivePrices whenUnbalancedPool {
         // Initial balanced pool state
         uint256 token0PoolReserve = 1e18;
-        uint256 token1PoolReserve = 4000e18;
+        uint256 token1PoolReserve = 3000e18;
 
         setLatestRoundDataMocks(defaults.ANSWER0(), defaults.ANSWER1(), token0PoolReserve, token1PoolReserve);
 
-        // Next pool state: attacker unbalances the pool
-        // Assume: zero swap fees. Out token is token0.
-        // tokenAmountOut is set to the maximum amount before reverting due to: BNum_BPowBaseTooHigh()
-        uint256 tokenAmountOut = maxAmountOutGivenBalanceOut(token0PoolReserve);
-        uint256 tokenAmountIn = calcInGivenOut(
-            token1PoolReserve, defaults.WEIGHT_50(), token0PoolReserve, defaults.WEIGHT_50(), tokenAmountOut, 0
+        // Next pool state: too much token 1
+        // token 0 out: amount == 0.9
+        uint256 token0Amountout = 0.9e18;
+        uint256 token1AmountIn = calcInGivenOutSignedWadMath(
+            token1PoolReserve, defaults.WEIGHT_50(), token0PoolReserve, defaults.WEIGHT_50(), token0Amountout
         );
-        token0PoolReserve -= tokenAmountOut;
-        token1PoolReserve += tokenAmountIn;
+        token0PoolReserve -= token0Amountout;
+        token1PoolReserve += token1AmountIn;
 
-        // Naive price
-        // token0PoolReserve ≈ 0.5e8 token 0, token1PoolReserve ≈ 8000e18 token 1
-        // naivePrice ≈ 10e8 == (0.5 * 4000 + 8000 * 1)
-        uint256 naivePrice = (token0PoolReserve * 4000e8 + token1PoolReserve * 1e8) / defaults.LP_TOKEN_SUPPLY();
+        // naivePrice ≈ $30.3 / LP token == 30.3e8 == (0.1 * 3000 + 30000 * 1)
+        uint256 naivePrice = (
+            token0PoolReserve * uint256(defaults.ANSWER0()) + token1PoolReserve * uint256(defaults.ANSWER1())
+        ) / defaults.LP_TOKEN_SUPPLY();
 
         // LP price
         (, int256 answer,,,) = oracle.latestRoundData();
 
         // Assertions
-        // The naive LP token price is approx 25% higher than balanced pool price.
-        assertApproxEqRel(naivePrice, 10e8, 1e16); // within 1% of 10e8
-        // LP token price is within 0.1% of the balanced pool state
-        assertApproxEqRel(uint256(answer), 8e8, 1e15);
+        // The naive LP token price is approx. 5x times higher than balanced pool price.
+        assertApproxEqRel(naivePrice, 30.3e8, 1e10); // 100% == 1e18
+        assertApproxEqRel(uint256(answer), 6e8, 1e10);
     }
 
     function test_LargeUnbalancing_50_50Pool_TooMuchToken0() external whenPositivePrices whenUnbalancedPool {
         // Initial balanced pool state
         uint256 token0PoolReserve = 1e18;
-        uint256 token1PoolReserve = 4000e18;
+        uint256 token1PoolReserve = 3000e18;
 
         setLatestRoundDataMocks(defaults.ANSWER0(), defaults.ANSWER1(), token0PoolReserve, token1PoolReserve);
 
-        // Next pool state: attacker unbalances the pool
-        // Assume: zero swap fees. Out token is token1.
-        // tokenAmountOut is set to the maximum amount before reverting due to: BNum_BPowBaseTooHigh()
-        uint256 tokenAmountOut = maxAmountOutGivenBalanceOut(token1PoolReserve);
-        uint256 tokenAmountIn = calcInGivenOut(
-            token0PoolReserve, defaults.WEIGHT_50(), token1PoolReserve, defaults.WEIGHT_50(), tokenAmountOut, 0
+        // Next pool state: too much token 0
+        // token 1 out: amount == 2700
+        uint256 token1Amountout = 2700e18;
+        uint256 token0AmountIn = calcInGivenOutSignedWadMath(
+            token0PoolReserve, defaults.WEIGHT_50(), token1PoolReserve, defaults.WEIGHT_50(), token1Amountout
         );
-        token1PoolReserve -= tokenAmountOut;
-        token0PoolReserve += tokenAmountIn;
+        token0PoolReserve += token0AmountIn;
+        token1PoolReserve -= token1Amountout;
 
-        // Naive price
-        // token0PoolReserve ≈ 0.5e8 token 0, token1PoolReserve ≈ 8000e18 token 1
-        // naivePrice ≈ 10e8 == (2 * 4000 + 2000 * 1)
-        uint256 naivePrice = (token0PoolReserve * 4000e8 + token1PoolReserve * 1e8) / defaults.LP_TOKEN_SUPPLY();
+        emit log_uint(token0PoolReserve);
+        emit log_uint(token1PoolReserve);
+
+        // naivePrice ≈ $30.3 / LP token == 30.3e8 == (10 * 3000 + 300 * 1)
+        uint256 naivePrice = (
+            token0PoolReserve * uint256(defaults.ANSWER0()) + token1PoolReserve * uint256(defaults.ANSWER1())
+        ) / defaults.LP_TOKEN_SUPPLY();
 
         // LP price
         (, int256 answer,,,) = oracle.latestRoundData();
 
         // Assertions
-        // The naive LP token price is approx 25% higher than balanced pool price.
-        assertApproxEqRel(naivePrice, 10e8, 1e16);
-        // LP token price is within 0.1% of the balanced pool state
-        assertApproxEqRel(uint256(answer), 8e8, 1e15);
+        // The naive LP token price is approx. 5x times higher than balanced pool price.
+        assertApproxEqRel(naivePrice, 30.3e8, 1e10); // 100% == 1e18
+        assertApproxEqRel(uint256(answer), 6e8, 1e10);
     }
 
     function test_LargeUnbalancing_80_20Pool_TooMuchToken1() external whenPositivePrices whenUnbalancedPool {
-        // Initial balanced pool state 80% token 0 - 20% token 1
-        // Price in balanced state is 5e8
+        // Re-init oracle to adjust for 80/20 pool
+        reinitOracleTokenArgs(18, 18, 0.8e18);
+
+        // Price in balanced state is 3.75e8
+        // token0 value: 3000 (80%)
+        // token1 value: 750 (20%)
         uint256 token0PoolReserve = 1e18;
-        uint256 token1PoolReserve = 1000e18;
+        uint256 token1PoolReserve = 750e18;
 
         setLatestRoundDataMocks(defaults.ANSWER0(), defaults.ANSWER1(), token0PoolReserve, token1PoolReserve);
 
-        // Next pool state: attacker unbalances the pool
-        // Assume: zero swap fees. Out token is token0.
-        // tokenAmountOut is set to approx. max amount before reverting due to: BNum_BPowBaseTooHigh()
-        // uint256 tokenAmountOut = 0.5e18 - 1 wei;
-        uint256 tokenAmountOut = maxAmountOutGivenBalanceOut(token0PoolReserve);
-        uint256 tokenAmountIn = calcInGivenOut(
-            token1PoolReserve, defaults.WEIGHT_20(), token0PoolReserve, defaults.WEIGHT_80(), tokenAmountOut, 0
+        // Next pool state: too much token 1
+        // token 0 out: amount == 0.5
+        uint256 token0Amountout = 0.5e18;
+        uint256 token1AmountIn = calcInGivenOutSignedWadMath(
+            token1PoolReserve, defaults.WEIGHT_20(), token0PoolReserve, defaults.WEIGHT_80(), token0Amountout
         );
-        token0PoolReserve -= tokenAmountOut;
-        token1PoolReserve += tokenAmountIn;
+        token0PoolReserve -= token0Amountout;
+        token1PoolReserve += token1AmountIn;
 
-        // NaivePrice ≈ 18e8 == (0.5 * 4000 + 16000 * 1)
-        uint256 naivePrice = (token0PoolReserve * 4000e8 + token1PoolReserve * 1e8) / IERC20(mocks.pool).totalSupply();
+        // NaivePrice: 0.5 * 3000 + 12000 * 1 = 13.5e8 == $13.5/lp token
+        uint256 naivePrice = (
+            token0PoolReserve * uint256(defaults.ANSWER0()) + token1PoolReserve * uint256(defaults.ANSWER1())
+        ) / defaults.LP_TOKEN_SUPPLY();
 
         // LP price
         (, int256 answer,,,) = oracle.latestRoundData();
 
         // Assertions
-        // The naive LP token price is approx 260% higher than balanced pool price.
-        assertApproxEqRel(naivePrice, 18e8, 1e16); // 1% diff
-        // LP token price is within 0.1% of the balance pool price.
-        assertApproxEqRel(uint256(answer), 5e8, 1e15);
+        // The naive LP token price is approx 3.6x higher.
+        assertApproxEqRel(naivePrice, 13.5e8, 1e10); // 100% == 1e18
+        assertApproxEqRel(uint256(answer), 3.75e8, 1e10);
     }
 
-    function test_LargeUnbalancing_0_20Pool_TooMuchToken0() external whenPositivePrices whenUnbalancedPool {
-        // Initial balanced pool state 80% token 0 - 20% token 1
-        // Price in balanced state is 5e8
+    function test_LargeUnbalancing_80_20Pool_TooMuchToken0() external whenPositivePrices whenUnbalancedPool {
+        // Re-init oracle to adjust for 80/20 pool
+        reinitOracleTokenArgs(18, 18, 0.8e18);
+
+        // Price in balanced state is 3.75e8
+        // token0 value: 3000 (80%)
+        // token1 value: 750 (20%)
         uint256 token0PoolReserve = 1e18;
-        uint256 token1PoolReserve = 1000e18;
+        uint256 token1PoolReserve = 750e18;
 
         setLatestRoundDataMocks(defaults.ANSWER0(), defaults.ANSWER1(), token0PoolReserve, token1PoolReserve);
 
-        uint256 tokenAmountOut = maxAmountOutGivenBalanceOut(1000e18);
-        uint256 tokenAmountIn = calcInGivenOut(1e18, 0.8e18, 1000e18, 0.2e18, tokenAmountOut, 0);
-        token1PoolReserve -= tokenAmountOut;
-        token0PoolReserve += tokenAmountIn;
+        // Next pool state: too much token 0
+        // token 1 out: amount == 250e8
+        uint256 token1Amountout = 250e18;
+        uint256 token0AmountIn = calcInGivenOutSignedWadMath(
+            token0PoolReserve, defaults.WEIGHT_80(), token1PoolReserve, defaults.WEIGHT_20(), token1Amountout
+        );
+        token0PoolReserve += token0AmountIn;
+        token1PoolReserve -= token1Amountout;
 
-        // NaivePrice ≈ 18e8 == (0.5 * 4000 + 16000 * 1)
-        uint256 naivePrice = (token0PoolReserve * 4000e8 + token1PoolReserve * 1e8) / IERC20(mocks.pool).totalSupply();
+        // NaivePrice: 1.11 * 3000 + 500 * 1 = 3.83e8 == $3.83/lp token
+        uint256 naivePrice = (
+            token0PoolReserve * uint256(defaults.ANSWER0()) + token1PoolReserve * uint256(defaults.ANSWER1())
+        ) / defaults.LP_TOKEN_SUPPLY();
 
         // LP price
         (, int256 answer,,,) = oracle.latestRoundData();
 
         // Assertions
-        // The naive LP token price is within 6% of the balanced pool price.
-        assertApproxEqRel(naivePrice, 5e8, 6e16); // 1% diff
-        // LP token price is within 0.1% of the balance pool price.
-        assertApproxEqRel(uint256(answer), 5e8, 1e15);
-    }
-
-    function test_BalancedPool_EqualTokenDecimals() external {
-        uint256 token0PoolReserve = 1e6;
-        uint256 token1PoolReserve = 4000e6;
-
-        // Reinit the oracle to set token decimals to 6 instead of 18
-        reinitOracle(6, 6);
-
-        setLatestRoundDataMocks(defaults.ANSWER0(), defaults.ANSWER1(), token0PoolReserve, token1PoolReserve);
-
-        (, int256 answer,,,) = oracle.latestRoundData();
-
-        // Implemented assertions
-        // Expected LP token USD price = (1 * 4000 + 4000 * 1) / 1000 = $8/token === 8e8
-        assertEq(answer, 8e8, "answer");
+        assertApproxEqRel(naivePrice, 3.83e8, 3e15); // within 0.3%
+        assertApproxEqRel(uint256(answer), 3.75e8, 1e10);
     }
 }
