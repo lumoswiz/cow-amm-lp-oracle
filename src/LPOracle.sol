@@ -110,11 +110,11 @@ contract LPOracle is AggregatorV3Interface {
         /* Get the price feed data */
         (uint256 price0, uint256 price1, uint256 updatedAt_) = _getFeedData();
 
-        /* Simulate pool reserves with pool AMM math */
-        (uint256 token0Bal, uint256 token1Bal) = _simulatePoolReserves(price0, price1);
+        /* Directly calculate TVL from weighted pool math */
+        uint256 tvl = _calculateTVL(price0, price1);
 
-        /* Determine LP token price */
-        uint256 lpPrice = _calculatePrice(token0Bal, token1Bal, price0, price1);
+        /* Determine LP token price from tvl */
+        uint256 lpPrice = (tvl * 1e18) / IERC20(POOL).totalSupply();
 
         return (0, int256(lpPrice), 0, updatedAt_, 0);
     }
@@ -163,56 +163,23 @@ contract LPOracle is AggregatorV3Interface {
         }
     }
 
-    /// @notice Simulates the token balances for a 2 token weighted BCoWPool.
-    /// @dev Assumes zero fees & post rebalancing trade.
-    /// @param price0 Chainlink USD price for token 0.
-    /// @param price1 Chainlink USD price for token 1.
-    /// @return simBal0 Simulated balance for token 0.
-    /// @return simBal1 Simulated balance for token 1.
-    function _simulatePoolReserves(
-        uint256 price0,
-        uint256 price1
-    )
-        internal
-        view
-        returns (uint256 simBal0, uint256 simBal1)
-    {
+    /// @notice Calculates pool TVL post rebalancing trade with external token prices
+    /// @dev Input prices must have same decimal basis. Output TVL has same basis units.
+    /// @param price0 USD price of token 0.
+    /// @param price1 USD price of token 1.
+    /// @return tvl Pool TVL.
+    function _calculateTVL(uint256 price0, uint256 price1) internal view returns (uint256 tvl) {
         /* Get pool k value */
         int256 balance0 = int256(TOKEN0.balanceOf(POOL));
         int256 balance1 = int256(TOKEN1.balanceOf(POOL));
         int256 k = wadMul(wadPow(wadDiv(balance0, balance1), WEIGHT0), balance1);
 
-        /* Calculate simulated token 0 reserves */
-        int256 x_num = wadMul(int256(price1), WEIGHT0);
-        int256 x_den = wadMul(int256(price0), WEIGHT1);
-        simBal0 = uint256(wadMul(k, wadPow(wadDiv(x_num, x_den), WEIGHT1)));
+        /* Get weight factor */
+        int256 weightFactor = wadPow(wadDiv(WEIGHT0, WEIGHT1), WEIGHT1) + wadPow(wadDiv(WEIGHT1, WEIGHT0), WEIGHT0);
 
-        /* Calculate simulated token 1 reserves */
-        int256 y_num = wadMul(int256(price0), WEIGHT1);
-        int256 y_den = wadMul(int256(price1), WEIGHT0);
-        simBal1 = uint256(wadMul(k, wadPow(wadDiv(y_num, y_den), WEIGHT0)));
-    }
-
-    /// @notice Calculates the LP token price for the pool given token prices, simulated balances and LP token supply.
-    /// @dev Intermediate values have 18 decimals & should accomodate different token and feed decimals.
-    /// @dev Assumes: pool LP token ERC-20 implementation uses 18 decimals.
-    /// @param token0Bal Simulated pool balance of token0.
-    /// @param token1Bal Simulated pool balance of token1.
-    /// @param price0 External USD price feed latest answer for pool token0.
-    /// @param price1 External USD price feed latest answer for pool token1.
-    /// @return LP token USD price (8 decimals).
-    function _calculatePrice(
-        uint256 token0Bal,
-        uint256 token1Bal,
-        uint256 price0,
-        uint256 price1
-    )
-        internal
-        view
-        returns (uint256)
-    {
-        uint256 value0 = (token0Bal * price0 * 1e18) / (10 ** (TOKEN0_DECIMALS + FEED0.decimals()));
-        uint256 value1 = (token1Bal * price1 * 1e18) / (10 ** (TOKEN1_DECIMALS + FEED1.decimals()));
-        return ((value0 + value1) * 1e8) / IERC20(POOL).totalSupply();
+        /* Calculate TVL directly from pool math */
+        int256 pxComponent = wadPow(int256(price0), WEIGHT0);
+        int256 pyComponent = wadPow(int256(price1), WEIGHT1);
+        return uint256(wadMul(wadMul(wadMul(k, pxComponent), pyComponent), weightFactor));
     }
 }
