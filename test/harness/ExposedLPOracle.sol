@@ -11,10 +11,6 @@ contract ExposedLPOracle is LPOracle {
         return _getFeedData();
     }
 
-    function exposed_simulatePoolReserves(uint256 price0, uint256 price1) external view returns (uint256, uint256) {
-        return _simulatePoolReserves(price0, price1);
-    }
-
     function exposed_adjustDecimals(
         uint256 value0,
         uint256 value1,
@@ -28,16 +24,7 @@ contract ExposedLPOracle is LPOracle {
         return _adjustDecimals(value0, value1, decimals0, decimals1);
     }
 
-    function exposed_calculatePrice(
-        uint256 token0Bal,
-        uint256 token1Bal,
-        uint256 price0,
-        uint256 price1
-    )
-        external
-        view
-        returns (uint256)
-    {
-        return _calculatePrice(token0Bal, token1Bal, price0, price1);
+    function exposed_calculateTVL(uint256 price0, uint256 price1) external view returns (uint256) {
+        return _calculateTVL(price0, price1);
     }
 }
