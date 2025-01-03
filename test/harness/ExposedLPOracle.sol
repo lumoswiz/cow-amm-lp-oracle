@@ -11,19 +11,6 @@ contract ExposedLPOracle is LPOracle {
         return _getFeedData();
     }
 
-    function exposed_adjustDecimals(
-        uint256 value0,
-        uint256 value1,
-        uint8 decimals0,
-        uint8 decimals1
-    )
-        external
-        pure
-        returns (uint256 adjusted0, uint256 adjusted1)
-    {
-        return _adjustDecimals(value0, value1, decimals0, decimals1);
-    }
-
     function exposed_calculateTVL(uint256 price0, uint256 price1) external view returns (uint256) {
         return _calculateTVL(price0, price1);
     }

@@ -132,34 +132,17 @@ contract LPOracle is AggregatorV3Interface {
         (, int256 answer0,, uint256 updatedAt0,) = FEED0.latestRoundData();
         (, int256 answer1,, uint256 updatedAt1,) = FEED1.latestRoundData();
 
-        /* Adjust answers for price feed decimals */
-        (price0, price1) = _adjustDecimals(uint256(answer0), uint256(answer1), FEED0.decimals(), FEED1.decimals());
-
         /* Set update timestamp of oldest price feed */
         updatedAt = updatedAt0 < updatedAt1 ? updatedAt0 : updatedAt1;
-    }
 
-    /// @notice Adjusts input values according to decimals.
-    /// @dev Used to adjust pool reserve balances and price feed answers.
-    /// @param value0 Value associated with pool token 0.
-    /// @param value1 Value associated with pool token 1.
-    /// @param decimals0 Decimals for value0.
-    /// @param decimals1 Decimals for value1.
-    /// @return Ensures the return values have the same decimal base.
-    function _adjustDecimals(
-        uint256 value0,
-        uint256 value1,
-        uint256 decimals0,
-        uint256 decimals1
-    )
-        internal
-        pure
-        returns (uint256, uint256)
-    {
+        /* Adjust answers for price feed decimals */
+        uint8 decimals0 = FEED0.decimals();
+        uint8 decimals1 = FEED1.decimals();
+
         if (decimals0 == decimals1) {
-            return (value0, value1);
+            return (uint256(answer0), uint256(answer1), updatedAt);
         } else {
-            return (value0 * (10 ** (18 - decimals0)), value1 * (10 ** (18 - decimals1)));
+            return (uint256(answer0) * (10 ** (18 - decimals0)), uint256(answer1) * (10 ** (18 - decimals1)), updatedAt);
         }
     }
 
