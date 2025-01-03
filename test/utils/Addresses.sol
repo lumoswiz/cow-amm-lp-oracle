@@ -3,9 +3,6 @@ pragma solidity >=0.8.25 < 0.9.0;
 
 /// @dev Helper contract to obtain price feeds and pools for eth mainnet contracts
 contract Addresses {
-    /// @dev Deployed BCoWHelper contract address.
-    address internal constant HELPER = 0x3FF0041A614A9E6Bf392cbB961C97DA214E9CB31;
-
     /// @dev Token ids for retrieving deployed price feed and pool addresses.
     address public constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     address public constant UNI = 0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984;
@@ -47,13 +44,13 @@ contract Addresses {
     )
         internal
         view
-        returns (address, address, address, address)
+        returns (address, address, address)
     {
         address pool = pools[_getPoolId(token0, token1)];
         address feed0 = feeds[token0];
         address feed1 = feeds[token1];
         require(pool != address(0) && feed0 != address(0) && feed1 != address(0));
-        return (pool, HELPER, feed0, feed1);
+        return (pool, feed0, feed1);
     }
 
     function _getPoolId(address token0, address token1) internal pure returns (bytes32) {

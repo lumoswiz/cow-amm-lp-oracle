@@ -6,7 +6,7 @@ import { Mocks, OrderParams, TokenParams, FeedParams } from "test/utils/Types.so
 
 contract Defaults is Constants {
     uint256 public constant TOKEN0_BALANCE = 1e18;
-    uint256 public constant TOKEN1_BALANCE = 1e18;
+    uint256 public constant TOKEN1_BALANCE = 3000e18;
     uint256 public constant NORMALIZED_WEIGHT = 0.5e18;
     uint256 public constant DENORMALIZED_WEIGHT = 1e18;
     bytes32 public constant APP_DATA = keccak256("APP_DATA");
@@ -17,7 +17,7 @@ contract Defaults is Constants {
 
     uint8 public constant FEED_DECIMALS = 8;
 
-    int256 public constant ANSWER0 = 4000e8;
+    int256 public constant ANSWER0 = 3000e8;
     int256 public constant ANSWER1 = 1e8;
 
     Mocks private mocks;
@@ -33,33 +33,6 @@ contract Defaults is Constants {
     /*----------------------------------------------------------*|
     |*  # STRUCTS                                               *|
     |*----------------------------------------------------------*/
-
-    function mockOrderParamsCustomValues(
-        uint256 token0Balance,
-        uint256 token1Balance,
-        uint256 token0Weight
-    )
-        public
-        view
-        returns (OrderParams memory)
-    {
-        return OrderParams({
-            pool: mocks.pool,
-            factory: mocks.factory,
-            token0: TokenParams({
-                addr: mocks.token0,
-                balance: token0Balance,
-                normWeight: token0Weight,
-                denormWeight: DENORMALIZED_WEIGHT
-            }),
-            token1: TokenParams({
-                addr: mocks.token1,
-                balance: token1Balance,
-                normWeight: BONE - token0Weight,
-                denormWeight: DENORMALIZED_WEIGHT
-            })
-        });
-    }
 
     function mockFeedParams(
         int256 answer0,

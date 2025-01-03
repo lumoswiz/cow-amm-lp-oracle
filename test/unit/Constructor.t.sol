@@ -9,14 +9,14 @@ contract Constructor_Unit_Test is BaseTest {
         setFeedDecimals(19, 8);
 
         vm.expectRevert(LPOracle.UnsupportedDecimals.selector);
-        new LPOracle(mocks.pool, address(helper), mocks.feed0, mocks.feed1);
+        new LPOracle(mocks.pool, mocks.feed0, mocks.feed1);
     }
 
     function test_ShouldRevert_Feed1Decimals_Gt18() external {
         setFeedDecimals(8, 19);
 
         vm.expectRevert(LPOracle.UnsupportedDecimals.selector);
-        new LPOracle(mocks.pool, address(helper), mocks.feed0, mocks.feed1);
+        new LPOracle(mocks.pool, mocks.feed0, mocks.feed1);
     }
 
     modifier whenDecimalsLtEq18() {
@@ -27,7 +27,8 @@ contract Constructor_Unit_Test is BaseTest {
         uint8 feed0Decimals,
         uint8 feed1Decimals,
         uint8 token0Decimals,
-        uint8 token1Decimals
+        uint8 token1Decimals,
+        uint256 token0Weight
     )
         external
         whenDecimalsLtEq18
@@ -36,17 +37,19 @@ contract Constructor_Unit_Test is BaseTest {
         feed1Decimals = boundUint8(feed1Decimals, 0, 18);
         token0Decimals = boundUint8(token0Decimals, 0, 18);
         token1Decimals = boundUint8(token1Decimals, 0, 18);
+        token0Weight = bound(token0Weight, 1, 1e18 - 1);
 
-        setAllAddressDecimals(feed0Decimals, feed1Decimals, token0Decimals, token1Decimals);
-        LPOracle oracle_ = new LPOracle(mocks.pool, address(helper), mocks.feed0, mocks.feed1);
+        setOracleConstructorMockCalls(feed0Decimals, feed1Decimals, token0Decimals, token1Decimals, token0Weight);
+        LPOracle oracle_ = new LPOracle(mocks.pool, mocks.feed0, mocks.feed1);
 
         assertEq(oracle_.POOL(), mocks.pool, "POOL");
-        assertEq(oracle_.HELPER(), helper, "HELPER");
         assertEq(address(oracle_.TOKEN0()), mocks.token0, "TOKEN0");
         assertEq(address(oracle_.TOKEN1()), mocks.token1, "TOKEN1");
         assertEq(oracle_.TOKEN0_DECIMALS(), token0Decimals, "TOKEN0_DECIMALS");
         assertEq(oracle_.TOKEN1_DECIMALS(), token1Decimals, "TOKEN1_DECIMALS");
         assertEq(address(oracle_.FEED0()), mocks.feed0, "FEED0");
         assertEq(address(oracle_.FEED1()), mocks.feed1, "FEED1");
+        assertEq(oracle_.WEIGHT0(), int256(token0Weight), "WEIGHT0");
+        assertEq(oracle_.WEIGHT1(), int256(1e18 - token0Weight), "WEIGHT1");
     }
 }

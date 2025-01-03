@@ -2,7 +2,6 @@
 pragma solidity >=0.8.25 < 0.9.0;
 
 import { ExposedLPOracle } from "test/harness/ExposedLPOracle.sol";
-import { MockBCoWHelper } from "test/mocks/MockBCoWHelper.sol";
 
 import { Assertions } from "test/utils/Assertions.sol";
 import { Calculations } from "test/utils/Calculations.sol";
@@ -15,7 +14,6 @@ contract BaseTest is Assertions, Calculations, Utils {
 
     Defaults internal defaults;
     ExposedLPOracle internal oracle;
-    MockBCoWHelper internal helper;
 
     function setUp() public virtual {
         // Deploy the defaults contract.
@@ -30,18 +28,11 @@ contract BaseTest is Assertions, Calculations, Utils {
         vm.label(mocks.feed1 = makeAddr("FEED1"), "FEED1");
         defaults.setMocks(mocks);
 
-        // Mock BCoWFactory.APP_DATA() call
-        mock_factory_APP_DATA(mocks.factory, defaults.APP_DATA());
-
-        // Deploy MockBCoWHelper with default configuration
-        helper = new MockBCoWHelper(mocks.factory);
-        vm.label(address(helper), "MockBCoWHelper");
-
-        // Setup default decimal configs: feeds -> 8, tokens -> 18
-        setAllAddressDecimals(8, 8, 18, 18);
+        // Set defaults for LPOracle constructor args
+        setOracleConstructorMockCalls(8, 8, 18, 18, defaults.WEIGHT_50());
 
         // Initialize oracle with default configuration
-        oracle = new ExposedLPOracle(mocks.pool, address(helper), mocks.feed0, mocks.feed1);
+        oracle = new ExposedLPOracle(mocks.pool, mocks.feed0, mocks.feed1);
         vm.label(address(oracle), "ExposedLPOracle");
     }
 
@@ -69,19 +60,10 @@ contract BaseTest is Assertions, Calculations, Utils {
         mock_address_decimals(mocks.feed1, decimals1);
     }
 
-    /// @dev Helper to mock BCoWHelper.tokens() call & set token decimals
+    /// @dev Helper to mock token decimals
     function setTokenDecimals(uint8 decimals0, uint8 decimals1) internal {
-        // Mock helper.tokens() call
-        mock_helper_tokens(address(helper), mocks.pool, mocks.token0, mocks.token1);
-
-        // Mock decimals() calls for both tokens
         mock_address_decimals(mocks.token0, decimals0);
         mock_address_decimals(mocks.token1, decimals1);
-    }
-
-    function setMockOrder(uint256 token0Balance, uint256 token1Balance, uint256 token0Weight) internal {
-        OrderParams memory params = defaults.mockOrderParamsCustomValues(token0Balance, token1Balance, token0Weight);
-        mock_helper_order(params);
     }
 
     /// @dev Helper to mock price feed data for both feeds - decimals, latestRoundData
@@ -91,24 +73,56 @@ contract BaseTest is Assertions, Calculations, Utils {
         mock_feed_latestRoundData(params1.addr, params1.answer, params1.updatedAt);
     }
 
+    /// @dev Helper to mock the pool token normalized weights
+    function setTokenWeights(uint256 token0Weight) internal {
+        mock_pool_getNormalizedWeight(mocks.pool, mocks.token0, token0Weight);
+        mock_pool_getNormalizedWeight(mocks.pool, mocks.token1, 1e18 - token0Weight);
+    }
+
+    /// @dev Helper to mock the pool token balances
+    function setTokenBalances(uint256 token0Balance, uint256 token1Balance) internal {
+        mock_token_balanceOf(mocks.token0, mocks.pool, token0Balance);
+        mock_token_balanceOf(mocks.token1, mocks.pool, token1Balance);
+    }
+
     function setLatestRoundDataMocks(
         int256 answer0,
         int256 answer1,
         uint256 token0Balance,
-        uint256 token1Balance,
-        uint256 token0Weight
+        uint256 token1Balance
     )
         internal
     {
         (FeedParams memory feedParams0, FeedParams memory feedParams1) = defaults.mockFeedParams(answer0, answer1);
         setPriceFeedData(feedParams0, feedParams1);
-        setMockOrder(token0Balance, token1Balance, token0Weight);
+        setTokenBalances(token0Balance, token1Balance);
         mock_pool_totalSupply(mocks.pool, defaults.LP_TOKEN_SUPPLY());
+    }
+
+    function setOracleConstructorMockCalls(
+        uint8 feedDecimals0,
+        uint8 feedDecimals1,
+        uint8 tokenDecimals0,
+        uint8 tokenDecimals1,
+        uint256 token0Weight
+    )
+        internal
+    {
+        setAllAddressDecimals(feedDecimals0, feedDecimals1, tokenDecimals0, tokenDecimals1);
+        mock_pool_getFinalTokens(mocks.pool, mocks.token0, mocks.token1);
+        mock_pool_getNormalizedWeight(mocks.pool, mocks.token0, token0Weight);
+        mock_pool_getNormalizedWeight(mocks.pool, mocks.token1, 1e18 - token0Weight);
     }
 
     /// @dev Helper to reinitialize oracle after changing decimals
     function reinitOracle(uint8 decimals0, uint8 decimals1) internal {
         setAllAddressDecimals(8, 8, decimals0, decimals1);
-        oracle = new ExposedLPOracle(mocks.pool, address(helper), mocks.feed0, mocks.feed1);
+        oracle = new ExposedLPOracle(mocks.pool, mocks.feed0, mocks.feed1);
+    }
+
+    /// @dev Helper to reinitialize oracle with new token-related constructor args
+    function reinitOracleTokenArgs(uint8 token0Decimals, uint8 token1Decimals, uint256 token0Weight) internal {
+        setOracleConstructorMockCalls(8, 8, token0Decimals, token1Decimals, token0Weight);
+        oracle = new ExposedLPOracle(mocks.pool, mocks.feed0, mocks.feed1);
     }
 }

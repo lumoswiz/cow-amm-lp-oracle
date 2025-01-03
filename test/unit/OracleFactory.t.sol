@@ -14,7 +14,7 @@ contract OracleFactoryBenchmark is BaseTest {
         super.setUp();
 
         // Additional setup logic specific to OracleFactoryBenchmark
-        factory = new LPOracleFactory(address(helper));
+        factory = new LPOracleFactory();
     }
 
     // Add this struct at the contract level
@@ -78,7 +78,6 @@ contract OracleFactoryBenchmark is BaseTest {
 
         // Verify oracle initialization parameters
         assertEq(oracle.POOL(), mocks.pool, "Wrong pool address");
-        assertEq(address(oracle.HELPER()), address(helper), "Wrong helper address");
         assertEq(address(oracle.FEED0()), mocks.feed0, "Wrong feed0 address");
         assertEq(address(oracle.FEED1()), mocks.feed1, "Wrong feed1 address");
 
