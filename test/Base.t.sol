@@ -85,21 +85,6 @@ contract BaseTest is Assertions, Calculations, Utils {
         mock_token_balanceOf(mocks.token1, mocks.pool, token1Balance);
     }
 
-    /// @dev Helper to mock the pool token normalized weights
-    function setTokenWeights(uint256 token0Weight) internal {
-        mock_pool_getNormalizedWeight(mocks.pool, mocks.token0, token0Weight);
-        mock_pool_getNormalizedWeight(mocks.pool, mocks.token1, 1e18 - token0Weight);
-    }
-
-<<<<<<< HEAD
-    /// @dev Helper to mock the pool token balances
-    function setTokenBalances(uint256 token0Balance, uint256 token1Balance) internal {
-        mock_token_balanceOf(mocks.token0, mocks.pool, token0Balance);
-        mock_token_balanceOf(mocks.token1, mocks.pool, token1Balance);
-    }
-
-=======
->>>>>>> 88a87c9 (refactor: remove mock helper contract and dependencies)
     function setLatestRoundDataMocks(
         int256 answer0,
         int256 answer1,
