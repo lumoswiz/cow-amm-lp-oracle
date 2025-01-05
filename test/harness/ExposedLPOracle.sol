@@ -19,7 +19,7 @@ contract ExposedLPOracle is LPOracle {
     )
         external
         pure
-        returns (uint256 adjusted0, uint256 adjusted1)
+        returns (int256 adjusted0, int256 adjusted1)
     {
         return _adjustDecimals(answer0, answer1, decimals0, decimals1);
     }

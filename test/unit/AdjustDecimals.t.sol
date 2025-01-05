@@ -5,7 +5,7 @@ import { BaseTest } from "test/Base.t.sol";
 
 contract AdjustDecimals_Unit_Test is BaseTest {
     function test_adjustDecimals_SameDecimals() public view {
-        (uint256 adjusted0, uint256 adjusted1) = oracle.exposed_adjustDecimals(
+        (int256 adjusted0, int256 adjusted1) = oracle.exposed_adjustDecimals(
             100, // value0
             200, // value1
             6, // both decimals are 6
@@ -17,7 +17,7 @@ contract AdjustDecimals_Unit_Test is BaseTest {
     }
 
     function test_adjustDecimals_DifferentDecimals() public view {
-        (uint256 adjusted0, uint256 adjusted1) = oracle.exposed_adjustDecimals(
+        (int256 adjusted0, int256 adjusted1) = oracle.exposed_adjustDecimals(
             100, // value0
             200, // value1
             6, // decimals0 = 6
@@ -32,7 +32,7 @@ contract AdjustDecimals_Unit_Test is BaseTest {
 
     function test_adjustDecimals_EdgeCases() public view {
         // Test with zero values
-        (uint256 adjusted0, uint256 adjusted1) = oracle.exposed_adjustDecimals(0, 0, 6, 18);
+        (int256 adjusted0, int256 adjusted1) = oracle.exposed_adjustDecimals(0, 0, 6, 18);
         assertEq(adjusted0, 0);
         assertEq(adjusted1, 0);
 
@@ -56,22 +56,22 @@ contract AdjustDecimals_Unit_Test is BaseTest {
         oracle.exposed_adjustDecimals(100, 200, 18, 19);
 
         // Test with large numbers that might overflow
-        uint256 largeNumber = type(uint256).max;
+        int256 largeNumber = type(int256).max;
         vm.expectRevert();
         oracle.exposed_adjustDecimals(largeNumber, 200, 0, 18);
     }
 
     function test_adjustDecimals_LargeNumbers() public view {
         // Test with large but safe numbers
-        uint256 largeButSafe = 1e30;
-        (uint256 adjusted0, uint256 adjusted1) = oracle.exposed_adjustDecimals(largeButSafe, largeButSafe, 6, 6);
+        int256 largeButSafe = 1e30;
+        (int256 adjusted0, int256 adjusted1) = oracle.exposed_adjustDecimals(largeButSafe, largeButSafe, 6, 6);
         assertEq(adjusted0, largeButSafe);
         assertEq(adjusted1, largeButSafe);
     }
 
     function test_adjustDecimals_FuzzValues(
-        uint256 value0,
-        uint256 value1,
+        int256 value0,
+        int256 value1,
         uint8 decimals0,
         uint8 decimals1
     )
@@ -83,10 +83,10 @@ contract AdjustDecimals_Unit_Test is BaseTest {
         decimals1 = boundUint8(decimals1, 0, 18);
 
         // Bound values to prevent overflow
-        value0 = bound(value0, 0, type(uint256).max / (10 ** 18));
-        value1 = bound(value1, 0, type(uint256).max / (10 ** 18));
+        value0 = bound(value0, 0, type(int256).max / (10 ** 18));
+        value1 = bound(value1, 0, type(int256).max / (10 ** 18));
 
-        (uint256 adjusted0, uint256 adjusted1) = oracle.exposed_adjustDecimals(value0, value1, decimals0, decimals1);
+        (int256 adjusted0, int256 adjusted1) = oracle.exposed_adjustDecimals(value0, value1, decimals0, decimals1);
 
         // Basic sanity checks
         if (decimals0 == decimals1) {
