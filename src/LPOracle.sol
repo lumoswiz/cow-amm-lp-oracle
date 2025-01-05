@@ -108,10 +108,10 @@ contract LPOracle is AggregatorV3Interface {
         returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound)
     {
         /* Get the price feed data */
-        (uint256 price0, uint256 price1, uint256 updatedAt_) = _getFeedData();
+        (int256 answer0, int256 answer1, uint256 updatedAt_) = _getFeedData();
 
         /* Directly calculate TVL from weighted pool math */
-        uint256 tvl = _calculateTVL(price0, price1);
+        uint256 tvl = _calculateTVL(answer0, answer1);
 
         /* Determine LP token price from tvl */
         uint256 lpPrice = (tvl * 1e18) / IERC20(POOL).totalSupply();
@@ -124,51 +124,49 @@ contract LPOracle is AggregatorV3Interface {
     |*----------------------------------------------------------*/
 
     /// @notice Retrieves latest price data from Chainlink feeds and adjusts for decimals.
-    /// @return price0 USD price of token 0.
-    /// @return price1 USD price of token1.
+    /// @return answer0 Price feed answer for token 0.
+    /// @return answer1 Price feed answer for token 1.
     /// @return updatedAt The timestamp of the feed with the oldest price udpate.
-    function _getFeedData() internal view returns (uint256 price0, uint256 price1, uint256 updatedAt) {
+    function _getFeedData() internal view returns (int256 answer0, int256 answer1, uint256 updatedAt) {
         /* Get latestRoundData from price feeds */
-        (, int256 answer0,, uint256 updatedAt0,) = FEED0.latestRoundData();
-        (, int256 answer1,, uint256 updatedAt1,) = FEED1.latestRoundData();
+        (, int256 answer0_,, uint256 updatedAt0,) = FEED0.latestRoundData();
+        (, int256 answer1_,, uint256 updatedAt1,) = FEED1.latestRoundData();
 
         /* Adjust answers for price feed decimals */
-        (price0, price1) = _adjustDecimals(uint256(answer0), uint256(answer1), FEED0.decimals(), FEED1.decimals());
+        (answer0, answer1) = _adjustDecimals(answer0_, answer1_, FEED0.decimals(), FEED1.decimals());
 
         /* Set update timestamp of oldest price feed */
         updatedAt = updatedAt0 < updatedAt1 ? updatedAt0 : updatedAt1;
     }
 
-    /// @notice Adjusts input values according to decimals.
-    /// @dev Used to adjust pool reserve balances and price feed answers.
-    /// @param value0 Value associated with pool token 0.
-    /// @param value1 Value associated with pool token 1.
-    /// @param decimals0 Decimals for value0.
-    /// @param decimals1 Decimals for value1.
-    /// @return Ensures the return values have the same decimal base.
+    /// @notice Adjusts price feed answers for decimal differences.
+    /// @dev Ensures the return values have the same decimal base.
+    /// @param answer0 Price feed answer for token 0.
+    /// @param answer1 Price feed answer for token 1.
+    /// @param decimals0 Decimals for price feed of token 0.
+    /// @param decimals1 Decimals for price feed of token 1.
     function _adjustDecimals(
-        uint256 value0,
-        uint256 value1,
-        uint256 decimals0,
-        uint256 decimals1
+        int256 answer0,
+        int256 answer1,
+        uint8 decimals0,
+        uint8 decimals1
     )
         internal
         pure
-        returns (uint256, uint256)
+        returns (int256, int256)
     {
         if (decimals0 == decimals1) {
-            return (value0, value1);
+            return (answer0, answer1);
         } else {
-            return (value0 * (10 ** (18 - decimals0)), value1 * (10 ** (18 - decimals1)));
+            return (answer0 * int256(10 ** (18 - decimals0)), answer1 * int256(10 ** (18 - decimals1)));
         }
     }
 
     /// @notice Calculates pool TVL post rebalancing trade with external token prices
     /// @dev Input prices must have same decimal basis. Output TVL has same basis units.
-    /// @param price0 USD price of token 0.
-    /// @param price1 USD price of token 1.
-    /// @return tvl Pool TVL.
-    function _calculateTVL(uint256 price0, uint256 price1) internal view returns (uint256 tvl) {
+    /// @param answer0 price feed answer for token 0.
+    /// @param answer1 Price feed answer for token 1.
+    function _calculateTVL(int256 answer0, int256 answer1) internal view returns (uint256 tvl) {
         /* Get pool k value */
         int256 balance0 = int256(TOKEN0.balanceOf(POOL));
         int256 balance1 = int256(TOKEN1.balanceOf(POOL));
@@ -178,8 +176,8 @@ contract LPOracle is AggregatorV3Interface {
         int256 weightFactor = wadPow(wadDiv(WEIGHT0, WEIGHT1), WEIGHT1) + wadPow(wadDiv(WEIGHT1, WEIGHT0), WEIGHT0);
 
         /* Calculate TVL directly from pool math */
-        int256 pxComponent = wadPow(int256(price0), WEIGHT0);
-        int256 pyComponent = wadPow(int256(price1), WEIGHT1);
+        int256 pxComponent = wadPow(answer0, WEIGHT0);
+        int256 pyComponent = wadPow(answer1, WEIGHT1);
         return uint256(wadMul(wadMul(wadMul(k, pxComponent), pyComponent), weightFactor));
     }
 }
