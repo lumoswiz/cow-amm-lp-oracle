@@ -1,0 +1,19 @@
+Constructor.t.sol
+├── when at least one decimal call to a feed address fails
+│   └── it should revert
+└── when both decimal calls to the feed addresses succeeds
+    ├── given when at least one feed address returns a decimal value greater than 18
+    │   └── it should revert
+    └── given when both feed addresses return decimal values less than, or equal to, 18
+        ├── given when the pool address is not a finalized BCoWPool
+        │   └── it should revert
+        └── given when the pool address is a finalized BCoWPool
+            ├── it should set the feed for token 0
+            ├── it should set the feed for token 1
+            ├── it should set the pool address
+            ├── it should set token 0
+            ├── it should set token 1
+            ├── it should set the decimals for token 0
+            ├── it should set the decimals for token 1
+            ├── it should set the normalized weight for token 0
+            └── it should set the normalized weight for token 1
