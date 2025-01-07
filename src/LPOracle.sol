@@ -140,10 +140,11 @@ contract LPOracle is AggregatorV3Interface {
         uint8 feed1Decimals = FEED1.decimals();
 
         if (feed0Decimals == feed1Decimals) {
-            return (answer0, answer1, updatedAt);
+            return (answer0_, answer1_, updatedAt);
         } else {
-            return
-                (answer0 * int256(10 ** (18 - feed0Decimals)), answer1 * int256(10 ** (18 - feed1Decimals)), updatedAt);
+            return (
+                answer0_ * int256(10 ** (18 - feed0Decimals)), answer1_ * int256(10 ** (18 - feed1Decimals)), updatedAt
+            );
         }
     }
 
