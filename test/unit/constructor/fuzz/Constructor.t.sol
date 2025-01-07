@@ -4,7 +4,7 @@ pragma solidity 0.8.25;
 import { BaseTest } from "test/Base.t.sol";
 import { LPOracle } from "src/LPOracle.sol";
 
-contract Constructor_Concrete_Unit_Test is BaseTest {
+contract Constructor_Fuzz_Unit_Test is BaseTest {
     function testFuzz_ShouldRevert_Feed0DecimalsGt18(uint8 feed0Decimals) external {
         // Bounds
         feed0Decimals = boundUint8(feed0Decimals, 19, type(uint8).max);
