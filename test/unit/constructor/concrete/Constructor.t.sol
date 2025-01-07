@@ -32,6 +32,7 @@ contract Constructor_Concrete_Unit_Test is BaseTest {
     }
 
     function test_ShouldRevert_Feed0DecimalsGt18() external whenDecimalsSuccess {
+        // Mocks
         setFeedDecimals(19, 8);
 
         vm.expectRevert(LPOracle.UnsupportedDecimals.selector);
@@ -39,6 +40,7 @@ contract Constructor_Concrete_Unit_Test is BaseTest {
     }
 
     function test_ShouldRevert_Feed1DecimalsGt18() external whenDecimalsSuccess {
+        // Mocks
         setFeedDecimals(8, 19);
 
         vm.expectRevert(LPOracle.UnsupportedDecimals.selector);
