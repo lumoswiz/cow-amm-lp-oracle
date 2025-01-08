@@ -6,7 +6,7 @@ import { FeedParams } from "test/utils/Types.sol";
 import { IERC20 } from "cowprotocol/contracts/interfaces/IERC20.sol";
 import { stdError } from "forge-std/StdError.sol";
 
-contract LatestRoundData_Unit_Test is BaseTest {
+contract LatestRoundData_Concrete_Unit_Test is BaseTest {
     modifier whenPositivePrices() {
         _;
     }
