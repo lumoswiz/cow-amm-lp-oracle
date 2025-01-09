@@ -99,6 +99,26 @@ contract BaseTest is Assertions, Calculations, Utils {
         mock_pool_totalSupply(mocks.pool, defaults.LP_TOKEN_SUPPLY());
     }
 
+    function setAllLatestRoundDataMocks(
+        uint8 feed0Decimals,
+        uint8 feed1Decimals,
+        int256 answer0,
+        int256 answer1,
+        uint256 updatedAt0,
+        uint256 updatedAt1,
+        uint256 token0Balance,
+        uint256 token1Balance,
+        uint256 lpSupply
+    )
+        internal
+    {
+        (FeedParams memory feedParams0, FeedParams memory feedParams1) =
+            defaults.mockAllFeedParams(feed0Decimals, feed1Decimals, answer0, answer1, updatedAt0, updatedAt1);
+        setPriceFeedData(feedParams0, feedParams1);
+        setTokenBalances(token0Balance, token1Balance);
+        mock_pool_totalSupply(mocks.pool, lpSupply);
+    }
+
     function setOracleConstructorMockCalls(
         uint8 feedDecimals0,
         uint8 feedDecimals1,
