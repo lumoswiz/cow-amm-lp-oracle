@@ -600,7 +600,59 @@ contract LatestRoundData_Concrete_Unit_Test is BaseTest {
         whenPositiveLpSupply
         whenSameFeedDecimals
         whenUnbalancedPool
-    { }
+    {
+        // Re-init oracle to adjust for 80/20 pool
+        reinitOracleTokenArgs(18, 18, 0.8e18);
+
+        // Price in balanced state is 3.75e8
+        // token0 value: 3000 (80%)
+        // token1 value: 750 (20%)
+        uint256 token0PoolReserve = 1e18;
+        uint256 token1PoolReserve = 750e18;
+        int256 answer0 = 3000e8; // 8 decimal basis
+        int256 answer1 = 1e18;
+
+        // Mocks
+        setAllLatestRoundDataMocks(
+            8,
+            18,
+            answer0,
+            answer1,
+            defaults.DEC_1_2024(),
+            defaults.DEC_1_2024(),
+            token0PoolReserve,
+            token1PoolReserve,
+            defaults.LP_TOKEN_SUPPLY()
+        );
+
+        // Next pool state: too much token 1
+        // token 0 out: amount == 0.5
+        uint256 token0Amountout = 0.5e18;
+        uint256 token1AmountIn = calcInGivenOutSignedWadMath(
+            token1PoolReserve, defaults.WEIGHT_20(), token0PoolReserve, defaults.WEIGHT_80(), token0Amountout
+        );
+        token0PoolReserve -= token0Amountout;
+        token1PoolReserve += token1AmountIn;
+
+        // NaivePrice: 0.5 * 3000 + 12000 * 1 == $13.5/lp token
+        uint256 naivePrice = (
+            token0PoolReserve * uint256(answer0) * 10 ** (18 - 8) + token1PoolReserve * uint256(answer1)
+        ) / defaults.LP_TOKEN_SUPPLY();
+
+        // LP price
+        (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =
+            oracle.latestRoundData();
+
+        // Assertions
+        assertEq(roundId, 0, "roundId");
+        assertEq(startedAt, 0, "startedAt");
+        assertEq(answeredInRound, 0, "answeredInRound");
+
+        // The naive LP token price is approx 3.6x higher.
+        assertApproxEqRel(naivePrice, 13.5e18, 1e10); // 100% == 1e18
+        assertApproxEqRel(uint256(answer), 3.75e18, 1e10);
+        assertEq(updatedAt, defaults.DEC_1_2024(), "updatedAt");
+    }
 
     function test_LargeUnbalancing_80_20Pool_TooMuchToken0_ScaledAnswers()
         external
