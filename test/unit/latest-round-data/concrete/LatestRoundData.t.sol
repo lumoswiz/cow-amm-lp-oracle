@@ -234,12 +234,18 @@ contract LatestRoundData_Concrete_Unit_Test is BaseTest {
         ) / defaults.LP_TOKEN_SUPPLY();
 
         // LP price
-        (, int256 answer,,,) = oracle.latestRoundData();
+        (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =
+            oracle.latestRoundData();
 
         // Assertions
+        assertEq(roundId, 0, "roundId");
+        assertEq(startedAt, 0, "startedAt");
+        assertEq(answeredInRound, 0, "answeredInRound");
+
         // The naive LP token price is approx. 5x times higher than balanced pool price.
         assertApproxEqRel(naivePrice, 30.3e8, 1e10); // 100% == 1e18
         assertApproxEqRel(uint256(answer), 6e8, 1e10);
+        assertEq(updatedAt, block.timestamp, "updatedAt");
     }
 
     function test_LargeUnbalancing_50_50Pool_TooMuchToken0()
@@ -275,12 +281,18 @@ contract LatestRoundData_Concrete_Unit_Test is BaseTest {
         ) / defaults.LP_TOKEN_SUPPLY();
 
         // LP price
-        (, int256 answer,,,) = oracle.latestRoundData();
+        (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =
+            oracle.latestRoundData();
 
         // Assertions
+        assertEq(roundId, 0, "roundId");
+        assertEq(startedAt, 0, "startedAt");
+        assertEq(answeredInRound, 0, "answeredInRound");
+
         // The naive LP token price is approx. 5x times higher than balanced pool price.
         assertApproxEqRel(naivePrice, 30.3e8, 1e10); // 100% == 1e18
         assertApproxEqRel(uint256(answer), 6e8, 1e10);
+        assertEq(updatedAt, block.timestamp, "updatedAt");
     }
 
     function test_LargeUnbalancing_80_20Pool_TooMuchToken1()
@@ -318,12 +330,18 @@ contract LatestRoundData_Concrete_Unit_Test is BaseTest {
         ) / defaults.LP_TOKEN_SUPPLY();
 
         // LP price
-        (, int256 answer,,,) = oracle.latestRoundData();
+        (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =
+            oracle.latestRoundData();
 
         // Assertions
+        assertEq(roundId, 0, "roundId");
+        assertEq(startedAt, 0, "startedAt");
+        assertEq(answeredInRound, 0, "answeredInRound");
+
         // The naive LP token price is approx 3.6x higher.
         assertApproxEqRel(naivePrice, 13.5e8, 1e10); // 100% == 1e18
         assertApproxEqRel(uint256(answer), 3.75e8, 1e10);
+        assertEq(updatedAt, block.timestamp, "updatedAt");
     }
 
     function test_LargeUnbalancing_80_20Pool_TooMuchToken0()
@@ -361,10 +379,16 @@ contract LatestRoundData_Concrete_Unit_Test is BaseTest {
         ) / defaults.LP_TOKEN_SUPPLY();
 
         // LP price
-        (, int256 answer,,,) = oracle.latestRoundData();
+        (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =
+            oracle.latestRoundData();
 
         // Assertions
+        assertEq(roundId, 0, "roundId");
+        assertEq(startedAt, 0, "startedAt");
+        assertEq(answeredInRound, 0, "answeredInRound");
+
         assertApproxEqRel(naivePrice, 3.83e8, 3e15); // within 0.3%
         assertApproxEqRel(uint256(answer), 3.75e8, 1e10);
+        assertEq(updatedAt, block.timestamp, "updatedAt");
     }
 }
