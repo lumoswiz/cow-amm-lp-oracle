@@ -391,4 +391,68 @@ contract LatestRoundData_Concrete_Unit_Test is BaseTest {
         assertApproxEqRel(uint256(answer), 3.75e8, 1e10);
         assertEq(updatedAt, block.timestamp, "updatedAt");
     }
+
+    modifier whenDifferentFeedDecimals() {
+        _;
+    }
+
+    function test_50_50Pool_ScaledAnswers()
+        external
+        givenWhenDecimalsLtEq18
+        whenValidPoolBalances
+        whenPositivePrices
+        whenPositiveLpSupply
+        whenDifferentFeedDecimals
+        whenBalancedPool
+    { }
+
+    function test_80_20Pool_ScaledAnswers()
+        external
+        givenWhenDecimalsLtEq18
+        whenValidPoolBalances
+        whenPositivePrices
+        whenPositiveLpSupply
+        whenSameFeedDecimals
+        whenBalancedPool
+    { }
+
+    function test_LargeUnbalancing_50_50Pool_TooMuchToken1_ScaledAnswers()
+        external
+        givenWhenDecimalsLtEq18
+        whenValidPoolBalances
+        whenPositivePrices
+        whenPositiveLpSupply
+        whenSameFeedDecimals
+        whenUnbalancedPool
+    { }
+
+    function test_LargeUnbalancing_50_50Pool_TooMuchToken0_ScaledAnswers()
+        external
+        givenWhenDecimalsLtEq18
+        whenValidPoolBalances
+        whenPositivePrices
+        whenPositiveLpSupply
+        whenSameFeedDecimals
+        whenUnbalancedPool
+    { }
+
+    function test_LargeUnbalancing_80_20Pool_TooMuchToken1_ScaledAnswers()
+        external
+        givenWhenDecimalsLtEq18
+        whenValidPoolBalances
+        whenPositivePrices
+        whenPositiveLpSupply
+        whenSameFeedDecimals
+        whenUnbalancedPool
+    { }
+
+    function test_LargeUnbalancing_80_20Pool_TooMuchToken0_ScaledAnswers()
+        external
+        givenWhenDecimalsLtEq18
+        whenValidPoolBalances
+        whenPositivePrices
+        whenPositiveLpSupply
+        whenSameFeedDecimals
+        whenUnbalancedPool
+    { }
 }
