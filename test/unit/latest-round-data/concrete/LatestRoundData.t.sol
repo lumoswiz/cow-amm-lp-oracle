@@ -7,6 +7,22 @@ import { IERC20 } from "cowprotocol/contracts/interfaces/IERC20.sol";
 import { stdError } from "forge-std/StdError.sol";
 
 contract LatestRoundData_Concrete_Unit_Test is BaseTest {
+    function test_ShouldRevert_Feed0DecimalsGt18() external {
+        // Setup mocks
+        reinitOracleTokenArgs(19, 8, defaults.WEIGHT_50());
+
+        vm.expectRevert();
+        oracle.latestRoundData();
+    }
+
+    function test_ShouldRevert_Feed1DecimalsGt18() external {
+        // Setup mocks
+        reinitOracleTokenArgs(8, 19, defaults.WEIGHT_50());
+
+        vm.expectRevert();
+        oracle.latestRoundData();
+    }
+
     modifier whenPositivePrices() {
         _;
     }
