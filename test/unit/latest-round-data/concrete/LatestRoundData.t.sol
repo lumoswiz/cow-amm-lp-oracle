@@ -127,11 +127,22 @@ contract LatestRoundData_Concrete_Unit_Test is BaseTest {
         oracle.latestRoundData();
     }
 
+    modifier whenPositiveLpSupply() {
+        _;
+    }
+
     modifier whenBalancedPool() {
         _;
     }
 
-    function test_50_50Pool() external whenPositivePrices whenBalancedPool {
+    function test_50_50Pool()
+        external
+        givenWhenDecimalsLtEq18
+        whenValidPoolBalances
+        whenPositivePrices
+        whenPositiveLpSupply
+        whenBalancedPool
+    {
         uint256 token0PoolReserve = 1e18;
         uint256 token1PoolReserve = 3000e18;
 
@@ -151,7 +162,14 @@ contract LatestRoundData_Concrete_Unit_Test is BaseTest {
         assertEq(updatedAt, block.timestamp, "updatedAt");
     }
 
-    function test_80_20Pool() external whenPositivePrices whenBalancedPool {
+    function test_80_20Pool()
+        external
+        givenWhenDecimalsLtEq18
+        whenValidPoolBalances
+        whenPositivePrices
+        whenPositiveLpSupply
+        whenBalancedPool
+    {
         // Re-init oracle to adjust for 80/20 pool
         reinitOracleTokenArgs(18, 18, 0.8e18);
 
@@ -180,7 +198,14 @@ contract LatestRoundData_Concrete_Unit_Test is BaseTest {
         _;
     }
 
-    function test_LargeUnbalancing_50_50Pool_TooMuchToken1() external whenPositivePrices whenUnbalancedPool {
+    function test_LargeUnbalancing_50_50Pool_TooMuchToken1()
+        external
+        givenWhenDecimalsLtEq18
+        whenValidPoolBalances
+        whenPositivePrices
+        whenPositiveLpSupply
+        whenUnbalancedPool
+    {
         // Initial balanced pool state
         uint256 token0PoolReserve = 1e18;
         uint256 token1PoolReserve = 3000e18;
@@ -210,7 +235,14 @@ contract LatestRoundData_Concrete_Unit_Test is BaseTest {
         assertApproxEqRel(uint256(answer), 6e8, 1e10);
     }
 
-    function test_LargeUnbalancing_50_50Pool_TooMuchToken0() external whenPositivePrices whenUnbalancedPool {
+    function test_LargeUnbalancing_50_50Pool_TooMuchToken0()
+        external
+        givenWhenDecimalsLtEq18
+        whenValidPoolBalances
+        whenPositivePrices
+        whenPositiveLpSupply
+        whenUnbalancedPool
+    {
         // Initial balanced pool state
         uint256 token0PoolReserve = 1e18;
         uint256 token1PoolReserve = 3000e18;
@@ -243,7 +275,14 @@ contract LatestRoundData_Concrete_Unit_Test is BaseTest {
         assertApproxEqRel(uint256(answer), 6e8, 1e10);
     }
 
-    function test_LargeUnbalancing_80_20Pool_TooMuchToken1() external whenPositivePrices whenUnbalancedPool {
+    function test_LargeUnbalancing_80_20Pool_TooMuchToken1()
+        external
+        givenWhenDecimalsLtEq18
+        whenValidPoolBalances
+        whenPositivePrices
+        whenPositiveLpSupply
+        whenUnbalancedPool
+    {
         // Re-init oracle to adjust for 80/20 pool
         reinitOracleTokenArgs(18, 18, 0.8e18);
 
@@ -278,7 +317,14 @@ contract LatestRoundData_Concrete_Unit_Test is BaseTest {
         assertApproxEqRel(uint256(answer), 3.75e8, 1e10);
     }
 
-    function test_LargeUnbalancing_80_20Pool_TooMuchToken0() external whenPositivePrices whenUnbalancedPool {
+    function test_LargeUnbalancing_80_20Pool_TooMuchToken0()
+        external
+        givenWhenDecimalsLtEq18
+        whenValidPoolBalances
+        whenPositivePrices
+        whenPositiveLpSupply
+        whenUnbalancedPool
+    {
         // Re-init oracle to adjust for 80/20 pool
         reinitOracleTokenArgs(18, 18, 0.8e18);
 
