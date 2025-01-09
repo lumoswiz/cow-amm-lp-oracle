@@ -98,6 +98,35 @@ contract LatestRoundData_Concrete_Unit_Test is BaseTest {
         _;
     }
 
+    function test_ShouldRevert_ZeroLPTokenSupply()
+        external
+        givenWhenDecimalsLtEq18
+        whenValidPoolBalances
+        whenPositivePrices
+    {
+        uint256 token0PoolReserve = 1e18;
+        uint256 token1PoolReserve = 3000e18;
+        int256 answer0 = 3000e18;
+        int256 answer1 = 1e18;
+        uint256 lpSupply = 0;
+
+        // Mocks
+        setAllLatestRoundDataMocks(
+            18,
+            18,
+            answer0,
+            answer1,
+            defaults.DEC_1_2024(),
+            defaults.DEC_1_2024(),
+            token0PoolReserve,
+            token1PoolReserve,
+            lpSupply
+        );
+
+        vm.expectRevert(stdError.divisionError);
+        oracle.latestRoundData();
+    }
+
     modifier whenBalancedPool() {
         _;
     }
