@@ -23,6 +23,21 @@ contract LatestRoundData_Concrete_Unit_Test is BaseTest {
         oracle.latestRoundData();
     }
 
+    modifier givenWhenDecimalsLtEq18() {
+        _;
+    }
+
+    function test_ShouldRevert_PoolBalanceDifferenceTooLarge() external givenWhenDecimalsLtEq18 {
+        uint256 token0PoolReserve = 1e18;
+        uint256 token1PoolReserve = token0PoolReserve * 1e18 + 1;
+
+        // Mocks
+        setLatestRoundDataMocks(defaults.ANSWER0(), defaults.ANSWER1(), token0PoolReserve, token1PoolReserve);
+
+        vm.expectRevert("UNDEFINED");
+        oracle.latestRoundData();
+    }
+
     modifier whenPositivePrices() {
         _;
     }
