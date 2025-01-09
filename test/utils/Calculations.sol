@@ -91,4 +91,17 @@ contract Calculations {
             return (adjustedAnswer1 * token1Balance * weight0) / (adjustedAnswer0 * (1e18 - weight0));
         }
     }
+
+    function calcBalanceFromTVL(
+        uint8 feedDecimals,
+        int256 answer,
+        uint256 valueLocked
+    )
+        internal
+        pure
+        returns (uint256)
+    {
+        uint256 adjustedAnswer = uint256(answer) * 10 ** (18 - feedDecimals);
+        return (valueLocked * 1e18) / adjustedAnswer;
+    }
 }
