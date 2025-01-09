@@ -489,7 +489,54 @@ contract LatestRoundData_Concrete_Unit_Test is BaseTest {
         whenPositiveLpSupply
         whenSameFeedDecimals
         whenUnbalancedPool
-    { }
+    {
+        // Initial balanced pool state
+        uint256 token0PoolReserve = 1e18;
+        uint256 token1PoolReserve = 3000e18;
+        int256 answer0 = 3000e8; // 8 decimal basis
+        int256 answer1 = 1e18;
+
+        // Mocks
+        setAllLatestRoundDataMocks(
+            8,
+            18,
+            answer0,
+            answer1,
+            defaults.DEC_1_2024(),
+            defaults.DEC_1_2024(),
+            token0PoolReserve,
+            token1PoolReserve,
+            defaults.LP_TOKEN_SUPPLY()
+        );
+
+        // Next pool state: too much token 1
+        // token 0 out: amount == 0.9
+        uint256 token0Amountout = 0.9e18;
+        uint256 token1AmountIn = calcInGivenOutSignedWadMath(
+            token1PoolReserve, defaults.WEIGHT_50(), token0PoolReserve, defaults.WEIGHT_50(), token0Amountout
+        );
+        token0PoolReserve -= token0Amountout;
+        token1PoolReserve += token1AmountIn;
+
+        // naivePrice ≈ $30.3 / LP token == (0.1 * 3000 + 30000 * 1)
+        uint256 naivePrice = (
+            token0PoolReserve * uint256(answer0) * 10 ** (18 - 8) + token1PoolReserve * uint256(answer1)
+        ) / defaults.LP_TOKEN_SUPPLY();
+
+        // LP price
+        (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =
+            oracle.latestRoundData();
+
+        // Assertions
+        assertEq(roundId, 0, "roundId");
+        assertEq(startedAt, 0, "startedAt");
+        assertEq(answeredInRound, 0, "answeredInRound");
+
+        // The naive LP token price is approx. 5x times higher than balanced pool price.
+        assertApproxEqRel(naivePrice, 30.3e18, 1e10); // 100% == 1e18
+        assertApproxEqRel(uint256(answer), 6e18, 1e10);
+        assertEq(updatedAt, defaults.DEC_1_2024(), "updatedAt");
+    }
 
     function test_LargeUnbalancing_50_50Pool_TooMuchToken0_ScaledAnswers()
         external
