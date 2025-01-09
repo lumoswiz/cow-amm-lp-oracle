@@ -47,4 +47,22 @@ contract Defaults is Constants {
             FeedParams({ addr: mocks.feed1, decimals: FEED_DECIMALS, answer: answer1, updatedAt: block.timestamp })
         );
     }
+
+    function mockAllFeedParams(
+        uint8 feed0Decimals,
+        uint8 feed1Decimals,
+        int256 answer0,
+        int256 answer1,
+        uint256 updatedAt0,
+        uint256 updatedAt1
+    )
+        public
+        view
+        returns (FeedParams memory, FeedParams memory)
+    {
+        return (
+            FeedParams({ addr: mocks.feed0, decimals: feed0Decimals, answer: answer0, updatedAt: updatedAt0 }),
+            FeedParams({ addr: mocks.feed1, decimals: feed1Decimals, answer: answer1, updatedAt: updatedAt1 })
+        );
+    }
 }

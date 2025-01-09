@@ -1,0 +1,16 @@
+GetFeedData.t.sol
+└── given when both feed addresses are valid chainlink price feeds
+    ├── given when at least one feed address has a decimal value greater than 18
+    │   └── it should revert
+    └── given when both feed addresses have decimal values less than, or equal to, 18
+        ├── given when the feed addresses have the same decimals
+        │   ├── it should return the answer for feed 0
+        │   ├── it should return the answer for feed 1
+        │   └── it should return the update timestamp of the oldest price feed
+        └── given when the feed addresses have different decimals
+            ├── given when at least one feed returns an answer causes an arithmetic error when adjusted
+            │   └── it should revert
+            └── given both feeds return answers that do not cause an arithmetic error when adjusted
+                ├── it should return the answer for feed 0 adjusted to have a basis of 18 decimals
+                ├── it should return the answer for feed 1 adjusted to have a basis of 18 decimals
+                └── it should return the update timestamp of the oldest price feed
