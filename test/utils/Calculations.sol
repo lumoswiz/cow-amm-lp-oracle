@@ -44,4 +44,26 @@ contract Calculations {
             )
         );
     }
+
+    function calculateNaivePrice(
+        uint8 feed0Decimals,
+        uint8 feed1Decimals,
+        int256 answer0,
+        int256 answer1,
+        uint256 token0Balance,
+        uint256 token1Balance
+    )
+        internal
+        pure
+        returns (uint256)
+    {
+        if (feed0Decimals == feed1Decimals) {
+            return (token0Balance * uint256(answer0) + token1Balance * uint256(answer1)) / 1e18;
+        } else {
+            return (
+                token0Balance * uint256(answer0) * 10 ** (18 - feed0Decimals)
+                    + token1Balance * uint256(answer1) * 10 ** (18 - feed1Decimals)
+            ) / 1e18;
+        }
+    }
 }
