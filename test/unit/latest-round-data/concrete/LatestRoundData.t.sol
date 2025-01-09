@@ -131,6 +131,10 @@ contract LatestRoundData_Concrete_Unit_Test is BaseTest {
         _;
     }
 
+    modifier whenSameFeedDecimals() {
+        _;
+    }
+
     modifier whenBalancedPool() {
         _;
     }
@@ -141,6 +145,7 @@ contract LatestRoundData_Concrete_Unit_Test is BaseTest {
         whenValidPoolBalances
         whenPositivePrices
         whenPositiveLpSupply
+        whenSameFeedDecimals
         whenBalancedPool
     {
         uint256 token0PoolReserve = 1e18;
@@ -168,6 +173,7 @@ contract LatestRoundData_Concrete_Unit_Test is BaseTest {
         whenValidPoolBalances
         whenPositivePrices
         whenPositiveLpSupply
+        whenSameFeedDecimals
         whenBalancedPool
     {
         // Re-init oracle to adjust for 80/20 pool
@@ -204,6 +210,7 @@ contract LatestRoundData_Concrete_Unit_Test is BaseTest {
         whenValidPoolBalances
         whenPositivePrices
         whenPositiveLpSupply
+        whenSameFeedDecimals
         whenUnbalancedPool
     {
         // Initial balanced pool state
@@ -241,6 +248,7 @@ contract LatestRoundData_Concrete_Unit_Test is BaseTest {
         whenValidPoolBalances
         whenPositivePrices
         whenPositiveLpSupply
+        whenSameFeedDecimals
         whenUnbalancedPool
     {
         // Initial balanced pool state
@@ -281,6 +289,7 @@ contract LatestRoundData_Concrete_Unit_Test is BaseTest {
         whenValidPoolBalances
         whenPositivePrices
         whenPositiveLpSupply
+        whenSameFeedDecimals
         whenUnbalancedPool
     {
         // Re-init oracle to adjust for 80/20 pool
@@ -323,6 +332,7 @@ contract LatestRoundData_Concrete_Unit_Test is BaseTest {
         whenValidPoolBalances
         whenPositivePrices
         whenPositiveLpSupply
+        whenSameFeedDecimals
         whenUnbalancedPool
     {
         // Re-init oracle to adjust for 80/20 pool
