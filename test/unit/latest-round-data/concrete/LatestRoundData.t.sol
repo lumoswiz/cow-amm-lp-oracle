@@ -445,7 +445,41 @@ contract LatestRoundData_Concrete_Unit_Test is BaseTest {
         whenPositiveLpSupply
         whenSameFeedDecimals
         whenBalancedPool
-    { }
+    {
+        // Re-init oracle to adjust for 80/20 pool
+        reinitOracleTokenArgs(18, 18, 0.8e18);
+
+        // Variables
+        uint256 token0PoolReserve = 1e18;
+        uint256 token1PoolReserve = 750e18;
+        int256 answer0 = 3000e8; // 8 decimal basis
+        int256 answer1 = 1e18;
+
+        // Mocks
+        setAllLatestRoundDataMocks(
+            8,
+            18,
+            answer0,
+            answer1,
+            defaults.DEC_1_2024(),
+            defaults.DEC_1_2024(),
+            token0PoolReserve,
+            token1PoolReserve,
+            defaults.LP_TOKEN_SUPPLY()
+        );
+
+        (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =
+            oracle.latestRoundData();
+
+        // Assertions
+        assertEq(roundId, 0, "roundId");
+        assertEq(startedAt, 0, "startedAt");
+        assertEq(answeredInRound, 0, "answeredInRound");
+
+        // Expected LP token USD price = (1 * 3000 + 750 * 1) / 1000 = $3.75/token
+        assertApproxEqRel(answer, 3.75e18, 1e10); // 100% == 1e18
+        assertEq(updatedAt, defaults.DEC_1_2024(), "updatedAt");
+    }
 
     function test_LargeUnbalancing_50_50Pool_TooMuchToken1_ScaledAnswers()
         external
