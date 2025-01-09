@@ -57,4 +57,76 @@ contract LatestRoundData_Fuzz_Unit_Test is BaseTest {
         vm.expectRevert();
         oracle.latestRoundData();
     }
+
+    modifier whenPositivePrices() {
+        _;
+    }
+
+    modifier whenPositiveLpSupply() {
+        _;
+    }
+
+    modifier whenSameFeedDecimals() {
+        _;
+    }
+
+    modifier whenBalancedPool() {
+        _;
+    }
+
+    function testFuzz_ArbitraryWeights_BalancedPool(
+        uint8 decimals,
+        int256 answer0,
+        int256 answer1,
+        uint256 weight0,
+        uint256 token1ValueLocked,
+        uint256 lpSupply
+    )
+        external
+        givenWhenDecimalsLtEq18
+        whenValidPoolBalances
+        whenPositivePrices
+        whenPositiveLpSupply
+        whenSameFeedDecimals
+        whenBalancedPool
+    {
+        // Bounds
+        decimals = boundUint8(decimals, 6, 18);
+        int256 assetUnit = int256(10 ** decimals);
+        weight0 = bound(weight0, 2e16, 98e16); // 2% to 98% weights
+        token1ValueLocked = bound(token1ValueLocked, 5e21, 1e27); // 5k to 1bn
+        answer0 = bound(answer0, assetUnit, 1_000_000 * assetUnit); // 1 to 1m
+        answer1 = bound(answer1, assetUnit, 1_000_000 * assetUnit); // 1 to 1m
+        lpSupply = bound(lpSupply, 100e18, 1e24); // 100 to 1m
+
+        // Re-init oracle to adjust for different pool weights
+        reinitOracleTokenArgs(18, 18, weight0);
+
+        // Calculations
+        uint256 token1PoolReserve = calcBalanceFromTVL(decimals, answer1, token1ValueLocked);
+        uint256 token0PoolReserve =
+            calcToken0FromToken1(decimals, decimals, answer0, answer1, weight0, token1PoolReserve);
+        uint256 naivePrice =
+            calculateNaivePrice(decimals, decimals, answer0, answer1, token0PoolReserve, token1PoolReserve, lpSupply);
+
+        // Mocks
+        setAllLatestRoundDataMocks(
+            decimals,
+            decimals,
+            answer0,
+            answer1,
+            defaults.DEC_1_2024(),
+            defaults.DEC_1_2024(),
+            token0PoolReserve,
+            token1PoolReserve,
+            lpSupply
+        );
+
+        // Retrieve oracle answer
+        (, int256 answer,,,) = oracle.latestRoundData();
+
+        // Assertions
+        // For a balanced pool, `naivePrice` and oracle answer should be the same
+        assertApproxEqRel(uint256(answer), naivePrice, 1e15); // 100% == 1e18
+    }
 }
