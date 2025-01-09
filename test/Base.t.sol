@@ -85,6 +85,7 @@ contract BaseTest is Assertions, Calculations, Utils {
         mock_token_balanceOf(mocks.token1, mocks.pool, token1Balance);
     }
 
+    /// @dev Helper to mock the price feed answers and pool balances for latestRoundData calls
     function setLatestRoundDataMocks(
         int256 answer0,
         int256 answer1,
@@ -99,6 +100,7 @@ contract BaseTest is Assertions, Calculations, Utils {
         mock_pool_totalSupply(mocks.pool, defaults.LP_TOKEN_SUPPLY());
     }
 
+    /// @dev Helper to mock all variables for latestRoundData calls
     function setAllLatestRoundDataMocks(
         uint8 feed0Decimals,
         uint8 feed1Decimals,
@@ -119,6 +121,7 @@ contract BaseTest is Assertions, Calculations, Utils {
         mock_pool_totalSupply(mocks.pool, lpSupply);
     }
 
+    /// @dev Helper to mock the oracle constructor calls
     function setOracleConstructorMockCalls(
         uint8 feedDecimals0,
         uint8 feedDecimals1,
