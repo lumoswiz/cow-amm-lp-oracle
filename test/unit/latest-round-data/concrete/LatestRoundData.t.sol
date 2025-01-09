@@ -662,5 +662,56 @@ contract LatestRoundData_Concrete_Unit_Test is BaseTest {
         whenPositiveLpSupply
         whenSameFeedDecimals
         whenUnbalancedPool
-    { }
+    {
+        // Re-init oracle to adjust for 80/20 pool
+        reinitOracleTokenArgs(18, 18, 0.8e18);
+
+        // Price in balanced state is 3.75e8
+        // token0 value: 3000 (80%)
+        // token1 value: 750 (20%)
+        uint256 token0PoolReserve = 1e18;
+        uint256 token1PoolReserve = 750e18;
+        int256 answer0 = 3000e8; // 8 decimal basis
+        int256 answer1 = 1e18;
+
+        // Mocks
+        setAllLatestRoundDataMocks(
+            8,
+            18,
+            answer0,
+            answer1,
+            defaults.DEC_1_2024(),
+            defaults.DEC_1_2024(),
+            token0PoolReserve,
+            token1PoolReserve,
+            defaults.LP_TOKEN_SUPPLY()
+        );
+
+        // Next pool state: too much token 0
+        // token 1 out: amount == 250e8
+        uint256 token1Amountout = 250e18;
+        uint256 token0AmountIn = calcInGivenOutSignedWadMath(
+            token0PoolReserve, defaults.WEIGHT_80(), token1PoolReserve, defaults.WEIGHT_20(), token1Amountout
+        );
+        token0PoolReserve += token0AmountIn;
+        token1PoolReserve -= token1Amountout;
+
+        // NaivePrice: 1.11 * 3000 + 500 * 1 = $3.83/lp token
+        uint256 naivePrice = (
+            token0PoolReserve * uint256(answer0) * 10 ** (18 - 8) + token1PoolReserve * uint256(answer1)
+        ) / defaults.LP_TOKEN_SUPPLY();
+
+        // LP price
+        (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) =
+            oracle.latestRoundData();
+
+        // Assertions
+        assertEq(roundId, 0, "roundId");
+        assertEq(startedAt, 0, "startedAt");
+        assertEq(answeredInRound, 0, "answeredInRound");
+
+        assertApproxEqRel(naivePrice, 3.83e18, 3e15); // within 0.3%
+        assertApproxEqRel(uint256(answer), 3.75e18, 1e10);
+        assertEq(updatedAt, defaults.DEC_1_2024(), "updatedAt");
+    }
 }
