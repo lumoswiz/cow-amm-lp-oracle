@@ -38,6 +38,62 @@ contract LatestRoundData_Concrete_Unit_Test is BaseTest {
         oracle.latestRoundData();
     }
 
+    modifier whenValidPoolBalances() {
+        _;
+    }
+
+    function test_ShouldRevert_Answer0Zero() external givenWhenDecimalsLtEq18 whenValidPoolBalances {
+        uint256 token0PoolReserve = 1e18;
+        uint256 token1PoolReserve = 3000e18;
+        int256 answer0 = 0;
+        int256 answer1 = 1e18;
+
+        // Mocks
+        setLatestRoundDataMocks(answer0, answer1, token0PoolReserve, token1PoolReserve);
+
+        vm.expectRevert("UNDEFINED");
+        oracle.latestRoundData();
+    }
+
+    function test_ShouldRevert_Answer0Negative() external givenWhenDecimalsLtEq18 whenValidPoolBalances {
+        uint256 token0PoolReserve = 1e18;
+        uint256 token1PoolReserve = 3000e18;
+        int256 answer0 = -1;
+        int256 answer1 = 1e18;
+
+        // Mocks
+        setLatestRoundDataMocks(answer0, answer1, token0PoolReserve, token1PoolReserve);
+
+        vm.expectRevert("UNDEFINED");
+        oracle.latestRoundData();
+    }
+
+    function test_ShouldRevert_Answer1Zero() external givenWhenDecimalsLtEq18 whenValidPoolBalances {
+        uint256 token0PoolReserve = 1e18;
+        uint256 token1PoolReserve = 3000e18;
+        int256 answer0 = 3000e18;
+        int256 answer1 = 0;
+
+        // Mocks
+        setLatestRoundDataMocks(answer0, answer1, token0PoolReserve, token1PoolReserve);
+
+        vm.expectRevert("UNDEFINED");
+        oracle.latestRoundData();
+    }
+
+    function test_ShouldRevert_Answer1Negative() external givenWhenDecimalsLtEq18 whenValidPoolBalances {
+        uint256 token0PoolReserve = 1e18;
+        uint256 token1PoolReserve = 3000e18;
+        int256 answer0 = 3000e18;
+        int256 answer1 = -1;
+
+        // Mocks
+        setLatestRoundDataMocks(answer0, answer1, token0PoolReserve, token1PoolReserve);
+
+        vm.expectRevert("UNDEFINED");
+        oracle.latestRoundData();
+    }
+
     modifier whenPositivePrices() {
         _;
     }
