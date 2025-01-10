@@ -134,7 +134,6 @@ contract LatestRoundData_Fuzz_Unit_Test is BaseTest {
     }
 
     function testFuzz_ArbitraryWeights_TooMuchToken1(
-        uint8 decimals,
         int256 answer0,
         int256 answer1,
         uint256 weight0,
@@ -203,7 +202,6 @@ contract LatestRoundData_Fuzz_Unit_Test is BaseTest {
     }
 
     function testFuzz_ArbitraryWeights_TooMuchToken0(
-        uint8 decimals,
         int256 answer0,
         int256 answer1,
         uint256 weight0,
