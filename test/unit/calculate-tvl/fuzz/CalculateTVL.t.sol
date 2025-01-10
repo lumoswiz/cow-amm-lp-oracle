@@ -36,4 +36,17 @@ contract CalculateTVL_Fuzz_Unit_Test is BaseTest {
         int256 a = wadDiv(balance0, balance1);
         assertGt(a, 0);
     }
+
+    /* ------------------------------------------------------------ */
+    /*   # WEIGHT FACTOR                                            */
+    /* ------------------------------------------------------------ */
+
+    // int256 weightFactor = wadPow(wadDiv(WEIGHT0, WEIGHT1), WEIGHT1) + wadPow(wadDiv(WEIGHT1, WEIGHT0), WEIGHT0);
+
+    function testFuzz_WeightFactor_ForValidPoolWeights(int256 weight0) external {
+        weight0 = bound(weight0, 2e16, 98e16); // only valid BCoWPool combinations
+        int256 weight1 = 1e18 - weight0;
+        int256 weightFactor = wadPow(wadDiv(weight0, weight1), weight1) + wadPow(wadDiv(weight1, weight0), weight0);
+        assertGt(weightFactor, 0);
+    }
 }
