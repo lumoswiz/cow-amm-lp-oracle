@@ -1,0 +1,17 @@
+CalculateTVL.t.sol
+├── when the pool balance of token 1 is greater than the pool balance of token 0 multiplied by WAD
+│   └── it should revert
+└── when the pool balance of token 1 is less than, or equal to, the pool balance of token 0 multiplied by WAD
+    ├── when the pool balance of token 1 is zero
+    │   └── it should revert
+    └── when the pool balance of token 1 is positive
+        ├── when the pool invariant k calculation overflows
+        │   └── it should revert
+        └── when the pool invariant k does not overflow
+            ├── when the weight factor calculation overflows
+            │   └── it should revert
+            └── when the weight factor calculation does not overflow
+                ├── when the TVL calculation overflows
+                │   └── it should revert
+                └── when the TVL calculation does not overflow
+                    └── it should return the pool TVL with the same decimal basis as the input answers
