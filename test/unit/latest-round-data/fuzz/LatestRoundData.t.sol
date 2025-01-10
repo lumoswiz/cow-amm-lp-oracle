@@ -127,6 +127,7 @@ contract LatestRoundData_Fuzz_Unit_Test is BaseTest {
         // Assertions
         // For a balanced pool, `naivePrice` and oracle answer should be the same
         assertApproxEqRel(uint256(answer), naivePrice, 1e15); // 100% == 1e18
+        assertGt(uint256(answer), 0);
     }
 
     modifier whenUnbalancedPool() {
@@ -197,6 +198,7 @@ contract LatestRoundData_Fuzz_Unit_Test is BaseTest {
 
         // Assertions
         assertGt(naivePrice, uint256(answer));
+        assertGt(uint256(answer), 0);
         // @ todo: is this useful?
         // uint256 diff = stdMath.percentDelta(uint256(answer), naivePrice);
     }
@@ -263,6 +265,7 @@ contract LatestRoundData_Fuzz_Unit_Test is BaseTest {
 
         // Assertions
         assertGt(naivePrice, uint256(answer));
+        assertGt(uint256(answer), 0);
         // @ todo: is this useful?
         // uint256 diff = stdMath.percentDelta(uint256(answer), naivePrice);
     }
