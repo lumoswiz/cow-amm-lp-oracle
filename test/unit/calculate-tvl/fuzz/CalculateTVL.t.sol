@@ -49,4 +49,59 @@ contract CalculateTVL_Fuzz_Unit_Test is BaseTest {
         int256 weightFactor = wadPow(wadDiv(weight0, weight1), weight1) + wadPow(wadDiv(weight1, weight0), weight0);
         assertGt(weightFactor, 0);
     }
+
+    /* ------------------------------------------------------------ */
+    /*   # CALCULATE POOL TVL                                       */
+    /* ------------------------------------------------------------ */
+
+    // int256 pxComponent = wadPow(answer0, WEIGHT0);
+    // int256 pyComponent = wadPow(answer1, WEIGHT1);
+    // uint256 tvl = uint256(wadMul(wadMul(wadMul(k, pxComponent), pyComponent), weightFactor));
+
+    modifier whenKDoesNotOverflow() {
+        _;
+    }
+
+    modifier whenAnswersPositive() {
+        _;
+    }
+
+    function testFuzz_TVL_HighAnswersAndHighDecimals(
+        int256 balance0,
+        int256 balance1,
+        int256 answer0,
+        int256 answer1
+    )
+        external
+        whenValidBalance0
+        whenValidBalance1
+        whenKDoesNotOverflow
+        whenAnswersPositive
+    { }
+
+    function testFuzz_TVL_LowAnswersAndLowDecimals(
+        int256 balance0,
+        int256 balance1,
+        int256 answer0,
+        int256 answer1
+    )
+        external
+        whenValidBalance0
+        whenValidBalance1
+        whenKDoesNotOverflow
+        whenAnswersPositive
+    { }
+
+    function testFuzz_TVL_UnderlyingFeedDecimalsIncreased(
+        int256 balance0,
+        int256 balance1,
+        int256 answer0,
+        int256 answer1
+    )
+        external
+        whenValidBalance0
+        whenValidBalance1
+        whenKDoesNotOverflow
+        whenAnswersPositive
+    { }
 }
