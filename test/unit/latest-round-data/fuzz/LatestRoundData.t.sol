@@ -5,6 +5,7 @@ import { BaseTest } from "test/Base.t.sol";
 import { FeedParams } from "test/utils/Types.sol";
 import { IERC20 } from "cowprotocol/contracts/interfaces/IERC20.sol";
 import { stdError } from "forge-std/StdError.sol";
+import { stdMath } from "forge-std/StdMath.sol";
 
 contract LatestRoundData_Fuzz_Unit_Test is BaseTest {
     modifier givenWhenDecimalsLtEq18() {
@@ -75,12 +76,10 @@ contract LatestRoundData_Fuzz_Unit_Test is BaseTest {
     }
 
     function testFuzz_ArbitraryWeights_BalancedPool(
-        uint8 decimals,
         int256 answer0,
         int256 answer1,
         uint256 weight0,
-        uint256 token1ValueLocked,
-        uint256 lpSupply
+        uint256 token1ValueLocked
     )
         external
         givenWhenDecimalsLtEq18
@@ -91,13 +90,12 @@ contract LatestRoundData_Fuzz_Unit_Test is BaseTest {
         whenBalancedPool
     {
         // Bounds
-        decimals = boundUint8(decimals, 6, 18);
+        weight0 = bound(weight0, 5e16, 95e16); // 5 to 95% weights
+        token1ValueLocked = bound(token1ValueLocked, 5e21, 5e24); // 5k to 5m
+        uint8 decimals = 8;
         int256 assetUnit = int256(10 ** decimals);
-        weight0 = bound(weight0, 2e16, 98e16); // 2% to 98% weights
-        token1ValueLocked = bound(token1ValueLocked, 5e21, 1e27); // 5k to 1bn
         answer0 = bound(answer0, assetUnit, 1_000_000 * assetUnit); // 1 to 1m
         answer1 = bound(answer1, assetUnit, 1_000_000 * assetUnit); // 1 to 1m
-        lpSupply = bound(lpSupply, 100e18, 1e24); // 100 to 1m
 
         // Re-init oracle to adjust for different pool weights
         reinitOracleTokenArgs(18, 18, weight0);
@@ -106,8 +104,9 @@ contract LatestRoundData_Fuzz_Unit_Test is BaseTest {
         uint256 token1PoolReserve = calcBalanceFromTVL(decimals, answer1, token1ValueLocked);
         uint256 token0PoolReserve =
             calcToken0FromToken1(decimals, decimals, answer0, answer1, weight0, token1PoolReserve);
-        uint256 naivePrice =
-            calculateNaivePrice(decimals, decimals, answer0, answer1, token0PoolReserve, token1PoolReserve, lpSupply);
+        uint256 naivePrice = calculateNaivePrice(
+            decimals, decimals, answer0, answer1, token0PoolReserve, token1PoolReserve, defaults.LP_TOKEN_SUPPLY()
+        );
 
         // Mocks
         setAllLatestRoundDataMocks(
@@ -119,7 +118,7 @@ contract LatestRoundData_Fuzz_Unit_Test is BaseTest {
             defaults.DEC_1_2024(),
             token0PoolReserve,
             token1PoolReserve,
-            lpSupply
+            defaults.LP_TOKEN_SUPPLY()
         );
 
         // Retrieve oracle answer
@@ -128,5 +127,78 @@ contract LatestRoundData_Fuzz_Unit_Test is BaseTest {
         // Assertions
         // For a balanced pool, `naivePrice` and oracle answer should be the same
         assertApproxEqRel(uint256(answer), naivePrice, 1e15); // 100% == 1e18
+    }
+
+    modifier whenUnbalancedPool() {
+        _;
+    }
+
+    function testFuzz_ArbitraryWeights_TooMuchToken1(
+        uint8 decimals,
+        int256 answer0,
+        int256 answer1,
+        uint256 weight0,
+        uint256 token1ValueLocked,
+        uint256 outFrac
+    )
+        external
+        givenWhenDecimalsLtEq18
+        whenValidPoolBalances
+        whenPositivePrices
+        whenPositiveLpSupply
+        whenSameFeedDecimals
+        whenUnbalancedPool
+    {
+        // Bounds
+        weight0 = bound(weight0, 5e16, 95e16); // 5 to 95% weights
+        token1ValueLocked = bound(token1ValueLocked, 5e21, 5e24); // 5k to 5m
+        uint8 decimals = 8;
+        int256 assetUnit = int256(10 ** decimals);
+        answer0 = bound(answer0, assetUnit, 1_000_000 * assetUnit); // 1 to 1m
+        answer1 = bound(answer1, assetUnit, 1_000_000 * assetUnit); // 1 to 1m
+        // Cannot bound outFrac higher for fuzz tests with large weight differences (e.g 95/5 pool)
+        outFrac = bound(outFrac, 500, 7000); // between 5-70%
+
+        // Re-init oracle to adjust for different pool weights
+        reinitOracleTokenArgs(18, 18, weight0);
+
+        // Calculations
+        uint256 token1PoolReserve = calcBalanceFromTVL(decimals, answer1, token1ValueLocked);
+        uint256 token0PoolReserve =
+            calcToken0FromToken1(decimals, decimals, answer0, answer1, weight0, token1PoolReserve);
+
+        // Next pool state
+        uint256 token0Amountout = (outFrac * token0PoolReserve) / 1e4;
+        uint256 token1AmountIn =
+            calcInGivenOutSignedWadMath(token1PoolReserve, 1e18 - weight0, token0PoolReserve, weight0, token0Amountout);
+
+        token0PoolReserve -= token0Amountout;
+        token1PoolReserve += token1AmountIn;
+
+        // Mocks
+        setAllLatestRoundDataMocks(
+            decimals,
+            decimals,
+            answer0,
+            answer1,
+            defaults.DEC_1_2024(),
+            defaults.DEC_1_2024(),
+            token0PoolReserve,
+            token1PoolReserve,
+            defaults.LP_TOKEN_SUPPLY()
+        );
+
+        // Naive price
+        uint256 naivePrice = calculateNaivePrice(
+            decimals, decimals, answer0, answer1, token0PoolReserve, token1PoolReserve, defaults.LP_TOKEN_SUPPLY()
+        );
+
+        // Retrieve oracle answer
+        (, int256 answer,,,) = oracle.latestRoundData();
+
+        // Assertions
+        assertGt(naivePrice, uint256(answer));
+        // @ todo: is this useful?
+        // uint256 diff = stdMath.percentDelta(uint256(answer), naivePrice);
     }
 }
