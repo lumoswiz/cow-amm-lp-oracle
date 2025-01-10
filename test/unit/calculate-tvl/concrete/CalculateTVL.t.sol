@@ -124,7 +124,13 @@ contract CalculateTVL_Concrete_Unit_Test is BaseTest {
         uint256 tvl = uint256(wadMul(wadMul(wadMul(k, pxComponent), pyComponent), weightFactor));
     }
 
-    function test_TVL_VeryHighAnswersAndHighFeedDecimals() external {
+    function test_TVL_MaxKValue_VeryHighAnswersAndHighFeedDecimals()
+        external
+        whenValidBalance0
+        whenValidBalance1
+        whenKDoesNotOverflow
+        whenAnswersPositive
+    {
         // Max value for: k * pxComponent * pyComponent
         int256 weight0 = 0.5e18;
         int256 weightFactor = 2e18; // max weight factor
@@ -140,7 +146,13 @@ contract CalculateTVL_Concrete_Unit_Test is BaseTest {
         assertLt(maxK, 1e18); // relatively low maximum k value
     }
 
-    function test_TVL_LowAnswersAndLowFeedDecimals() external {
+    function test_TVL_MaxKValue_LowAnswersAndLowFeedDecimals()
+        external
+        whenValidBalance0
+        whenValidBalance1
+        whenKDoesNotOverflow
+        whenAnswersPositive
+    {
         // Max value for: k * pxComponent * pyComponent
         int256 weight0 = 0.5e18;
         int256 weightFactor = 2e18; // max weight factor
