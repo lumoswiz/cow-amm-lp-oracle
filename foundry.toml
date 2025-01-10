@@ -2,7 +2,7 @@
 
 [profile.default]
 auto_detect_solc = false
-block_timestamp = 1_680_220_800 # March 31, 2023 at 00:00 GMT
+block_timestamp = 1_680_220_800                                   # March 31, 2023 at 00:00 GMT
 memory_limit = 128000000
 bytecode_hash = "none"
 evm_version = "cancun"
@@ -15,6 +15,7 @@ script = "script"
 solc = "0.8.25"
 src = "src"
 test = "test"
+fs_permissions = [{ access = "read-write", path = "./analysis" }]
 
 [profile.ci]
 fuzz = { runs = 10_000 }

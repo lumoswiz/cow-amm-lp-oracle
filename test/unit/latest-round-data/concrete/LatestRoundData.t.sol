@@ -219,11 +219,11 @@ contract LatestRoundData_Concrete_Unit_Test is BaseTest {
 
         // Next pool state: too much token 1
         // token 0 out: amount == 0.9
-        uint256 token0Amountout = 0.9e18;
+        uint256 token0AmountOut = 0.9e18;
         uint256 token1AmountIn = calcInGivenOutSignedWadMath(
-            token1PoolReserve, defaults.WEIGHT_50(), token0PoolReserve, defaults.WEIGHT_50(), token0Amountout
+            token1PoolReserve, defaults.WEIGHT_50(), token0PoolReserve, defaults.WEIGHT_50(), token0AmountOut
         );
-        token0PoolReserve -= token0Amountout;
+        token0PoolReserve -= token0AmountOut;
         token1PoolReserve += token1AmountIn;
 
         // Mocks
@@ -264,12 +264,12 @@ contract LatestRoundData_Concrete_Unit_Test is BaseTest {
 
         // Next pool state: too much token 0
         // token 1 out: amount == 2700
-        uint256 token1Amountout = 2700e18;
+        uint256 token1AmountOut = 2700e18;
         uint256 token0AmountIn = calcInGivenOutSignedWadMath(
-            token0PoolReserve, defaults.WEIGHT_50(), token1PoolReserve, defaults.WEIGHT_50(), token1Amountout
+            token0PoolReserve, defaults.WEIGHT_50(), token1PoolReserve, defaults.WEIGHT_50(), token1AmountOut
         );
         token0PoolReserve += token0AmountIn;
-        token1PoolReserve -= token1Amountout;
+        token1PoolReserve -= token1AmountOut;
 
         // Mocks
         setLatestRoundDataMocks(defaults.ANSWER0(), defaults.ANSWER1(), token0PoolReserve, token1PoolReserve);
@@ -314,11 +314,11 @@ contract LatestRoundData_Concrete_Unit_Test is BaseTest {
 
         // Next pool state: too much token 1
         // token 0 out: amount == 0.5
-        uint256 token0Amountout = 0.5e18;
+        uint256 token0AmountOut = 0.5e18;
         uint256 token1AmountIn = calcInGivenOutSignedWadMath(
-            token1PoolReserve, defaults.WEIGHT_20(), token0PoolReserve, defaults.WEIGHT_80(), token0Amountout
+            token1PoolReserve, defaults.WEIGHT_20(), token0PoolReserve, defaults.WEIGHT_80(), token0AmountOut
         );
-        token0PoolReserve -= token0Amountout;
+        token0PoolReserve -= token0AmountOut;
         token1PoolReserve += token1AmountIn;
 
         // Mocks
@@ -364,12 +364,12 @@ contract LatestRoundData_Concrete_Unit_Test is BaseTest {
 
         // Next pool state: too much token 0
         // token 1 out: amount == 250e8
-        uint256 token1Amountout = 250e18;
+        uint256 token1AmountOut = 250e18;
         uint256 token0AmountIn = calcInGivenOutSignedWadMath(
-            token0PoolReserve, defaults.WEIGHT_80(), token1PoolReserve, defaults.WEIGHT_20(), token1Amountout
+            token0PoolReserve, defaults.WEIGHT_80(), token1PoolReserve, defaults.WEIGHT_20(), token1AmountOut
         );
         token0PoolReserve += token0AmountIn;
-        token1PoolReserve -= token1Amountout;
+        token1PoolReserve -= token1AmountOut;
 
         // Mocks
         setLatestRoundDataMocks(defaults.ANSWER0(), defaults.ANSWER1(), token0PoolReserve, token1PoolReserve);
@@ -499,11 +499,11 @@ contract LatestRoundData_Concrete_Unit_Test is BaseTest {
 
         // Next pool state: too much token 1
         // token 0 out: amount == 0.9
-        uint256 token0Amountout = 0.9e18;
+        uint256 token0AmountOut = 0.9e18;
         uint256 token1AmountIn = calcInGivenOutSignedWadMath(
-            token1PoolReserve, defaults.WEIGHT_50(), token0PoolReserve, defaults.WEIGHT_50(), token0Amountout
+            token1PoolReserve, defaults.WEIGHT_50(), token0PoolReserve, defaults.WEIGHT_50(), token0AmountOut
         );
-        token0PoolReserve -= token0Amountout;
+        token0PoolReserve -= token0AmountOut;
         token1PoolReserve += token1AmountIn;
 
         // Mocks
@@ -556,12 +556,12 @@ contract LatestRoundData_Concrete_Unit_Test is BaseTest {
 
         // Next pool state: too much token 0
         // token 1 out: amount == 2700
-        uint256 token1Amountout = 2700e18;
+        uint256 token1AmountOut = 2700e18;
         uint256 token0AmountIn = calcInGivenOutSignedWadMath(
-            token0PoolReserve, defaults.WEIGHT_50(), token1PoolReserve, defaults.WEIGHT_50(), token1Amountout
+            token0PoolReserve, defaults.WEIGHT_50(), token1PoolReserve, defaults.WEIGHT_50(), token1AmountOut
         );
         token0PoolReserve += token0AmountIn;
-        token1PoolReserve -= token1Amountout;
+        token1PoolReserve -= token1AmountOut;
 
         // Mocks
         setAllLatestRoundDataMocks(
@@ -618,11 +618,11 @@ contract LatestRoundData_Concrete_Unit_Test is BaseTest {
 
         // Next pool state: too much token 1
         // token 0 out: amount == 0.5
-        uint256 token0Amountout = 0.5e18;
+        uint256 token0AmountOut = 0.5e18;
         uint256 token1AmountIn = calcInGivenOutSignedWadMath(
-            token1PoolReserve, defaults.WEIGHT_20(), token0PoolReserve, defaults.WEIGHT_80(), token0Amountout
+            token1PoolReserve, defaults.WEIGHT_20(), token0PoolReserve, defaults.WEIGHT_80(), token0AmountOut
         );
-        token0PoolReserve -= token0Amountout;
+        token0PoolReserve -= token0AmountOut;
         token1PoolReserve += token1AmountIn;
 
         // Mocks
@@ -680,12 +680,12 @@ contract LatestRoundData_Concrete_Unit_Test is BaseTest {
 
         // Next pool state: too much token 0
         // token 1 out: amount == 250e8
-        uint256 token1Amountout = 250e18;
+        uint256 token1AmountOut = 250e18;
         uint256 token0AmountIn = calcInGivenOutSignedWadMath(
-            token0PoolReserve, defaults.WEIGHT_80(), token1PoolReserve, defaults.WEIGHT_20(), token1Amountout
+            token0PoolReserve, defaults.WEIGHT_80(), token1PoolReserve, defaults.WEIGHT_20(), token1AmountOut
         );
         token0PoolReserve += token0AmountIn;
-        token1PoolReserve -= token1Amountout;
+        token1PoolReserve -= token1AmountOut;
 
         // Mocks
         setAllLatestRoundDataMocks(

@@ -168,11 +168,11 @@ contract LatestRoundData_Fuzz_Unit_Test is BaseTest {
             calcToken0FromToken1(decimals, decimals, answer0, answer1, weight0, token1PoolReserve);
 
         // Next pool state
-        uint256 token0Amountout = (outFrac * token0PoolReserve) / 1e4;
+        uint256 token0AmountOut = (outFrac * token0PoolReserve) / 1e4;
         uint256 token1AmountIn =
-            calcInGivenOutSignedWadMath(token1PoolReserve, 1e18 - weight0, token0PoolReserve, weight0, token0Amountout);
+            calcInGivenOutSignedWadMath(token1PoolReserve, 1e18 - weight0, token0PoolReserve, weight0, token0AmountOut);
 
-        token0PoolReserve -= token0Amountout;
+        token0PoolReserve -= token0AmountOut;
         token1PoolReserve += token1AmountIn;
 
         // Mocks
