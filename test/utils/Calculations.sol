@@ -44,4 +44,65 @@ contract Calculations {
             )
         );
     }
+
+    function calculateNaivePrice(
+        uint8 feed0Decimals,
+        uint8 feed1Decimals,
+        int256 answer0,
+        int256 answer1,
+        uint256 token0Balance,
+        uint256 token1Balance,
+        uint256 lpSupply
+    )
+        internal
+        pure
+        returns (uint256)
+    {
+        if (feed0Decimals == feed1Decimals) {
+            return (token0Balance * uint256(answer0) + token1Balance * uint256(answer1)) / lpSupply;
+        } else {
+            return (
+                token0Balance * uint256(answer0) * 10 ** (18 - feed0Decimals)
+                    + token1Balance * uint256(answer1) * 10 ** (18 - feed1Decimals)
+            ) / lpSupply;
+        }
+    }
+
+    /// @dev Helper function that calculates the pool token 0 balance given:
+    ///   - price feed answers
+    ///   - pool token 0 normalized weight
+    ///   - pool token 1 balance
+    function calcToken0FromToken1(
+        uint8 feed0Decimals,
+        uint8 feed1Decimals,
+        int256 answer0,
+        int256 answer1,
+        uint256 weight0,
+        uint256 token1Balance
+    )
+        internal
+        pure
+        returns (uint256)
+    {
+        if (feed0Decimals == feed1Decimals) {
+            return (uint256(answer1) * token1Balance * weight0) / (uint256(answer0) * (1e18 - weight0));
+        } else {
+            uint256 adjustedAnswer0 = uint256(answer0) * 10 ** (18 - feed0Decimals);
+            uint256 adjustedAnswer1 = uint256(answer1) * 10 ** (18 - feed1Decimals);
+            return (adjustedAnswer1 * token1Balance * weight0) / (adjustedAnswer0 * (1e18 - weight0));
+        }
+    }
+
+    function calcBalanceFromTVL(
+        uint8 feedDecimals,
+        int256 answer,
+        uint256 valueLocked
+    )
+        internal
+        pure
+        returns (uint256)
+    {
+        uint256 adjustedAnswer = uint256(answer) * 10 ** (18 - feedDecimals);
+        return (valueLocked * 1e18) / adjustedAnswer;
+    }
 }
