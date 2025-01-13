@@ -67,41 +67,66 @@ contract CalculateTVL_Fuzz_Unit_Test is BaseTest {
     }
 
     function testFuzz_TVL_HighAnswersAndHighDecimals(
-        int256 balance0,
         int256 balance1,
         int256 answer0,
-        int256 answer1
+        int256 answer1,
+        int256 weight0
     )
         external
         whenValidBalance0
         whenValidBalance1
         whenKDoesNotOverflow
         whenAnswersPositive
-    { }
+    {
+        // Bounds
+        answer0 = bound(answer0, 100_000e18, 1_000_000e18);
+        answer1 = bound(answer1, 100_000e18, 1_000_000e18);
+        weight0 = bound(weight0, 2e16, 98e16);
+        balance1 = bound(balance1, 1e17, 1e19); // value locked range: 10k to 1bn
+        int256 balance0 = int256(calcToken0FromToken1(18, 18, answer0, answer1, uint256(weight0), uint256(balance1)));
+
+        // Calculations
+        int256 k = wadMul(wadPow(wadDiv(balance0, balance1), weight0), balance1);
+        int256 weightFactor =
+            wadPow(wadDiv(weight0, 1e18 - weight0), 1e18 - weight0) + wadPow(wadDiv(1e18 - weight0, weight0), weight0);
+
+        int256 pxComponent = wadPow(answer0, weight0);
+        int256 pyComponent = wadPow(answer1, 1e18 - weight0);
+        int256 tvl = wadMul(wadMul(wadMul(k, pxComponent), pyComponent), weightFactor);
+
+        // Assertions
+        assertGt(tvl, 0, "zero TVL");
+    }
 
     function testFuzz_TVL_LowAnswersAndLowDecimals(
-        int256 balance0,
         int256 balance1,
         int256 answer0,
-        int256 answer1
+        int256 answer1,
+        int256 weight0
     )
         external
         whenValidBalance0
         whenValidBalance1
         whenKDoesNotOverflow
         whenAnswersPositive
-    { }
+    {
+        // Bounds
+        answer0 = bound(answer0, 1, 10); // 0.000001 to 0.00001 in 6 decimals
+        answer1 = bound(answer1, 1, 10); // 0.000001 to 0.00001 in 6 decimals
+        weight0 = bound(weight0, 2e16, 98e16);
+        balance1 = bound(balance1, 1e28, 1e32); // value locked range: 10k to 1bn
+        int256 balance0 = int256(calcToken0FromToken1(6, 6, answer0, answer1, uint256(weight0), uint256(balance1)));
 
-    function testFuzz_TVL_UnderlyingFeedDecimalsIncreased(
-        int256 balance0,
-        int256 balance1,
-        int256 answer0,
-        int256 answer1
-    )
-        external
-        whenValidBalance0
-        whenValidBalance1
-        whenKDoesNotOverflow
-        whenAnswersPositive
-    { }
+        // Calculations
+        int256 k = wadMul(wadPow(wadDiv(balance0, balance1), weight0), balance1);
+        int256 weightFactor =
+            wadPow(wadDiv(weight0, 1e18 - weight0), 1e18 - weight0) + wadPow(wadDiv(1e18 - weight0, weight0), weight0);
+
+        int256 pxComponent = wadPow(answer0, weight0);
+        int256 pyComponent = wadPow(answer1, 1e18 - weight0);
+        int256 tvl = wadMul(wadMul(wadMul(k, pxComponent), pyComponent), weightFactor);
+
+        // Assertions
+        assertGt(tvl, 0, "zero TVL");
+    }
 }
