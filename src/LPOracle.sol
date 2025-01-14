@@ -71,8 +71,9 @@ contract LPOracle is AggregatorV3Interface {
     |*----------------------------------------------------------*/
 
     /// @notice Returns the number of decimals used.
-    function decimals() external pure returns (uint8) {
-        return 8;
+    function decimals() external view returns (uint8) {
+        uint8 feed0Decimals = FEED0.decimals();
+        return feed0Decimals == FEED1.decimals() ? feed0Decimals : 18;
     }
 
     /// @notice Returns the description of the LP token pricing oracle.
