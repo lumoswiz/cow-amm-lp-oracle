@@ -8,6 +8,6 @@ contract LPOracle_Fork_Test is ForkTest {
 
     function test_Descriptor() external view {
         string memory expectedDescription = string.concat(FORK_POOL.name(), " LP Token / USD");
-        assertEq(oracle.description(), expectedDescription, "description");
+        assertEq(lpOracle.description(), expectedDescription, "description");
     }
 }

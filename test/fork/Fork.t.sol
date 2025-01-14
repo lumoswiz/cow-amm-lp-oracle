@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity >=0.8.25 < 0.9.0;
 
-import { Test } from "forge-std/Test.sol";
+import { BaseTest } from "test/Base.t.sol";
 import { Addresses } from "test/utils/Addresses.sol";
-import { Assertions } from "test/utils/Assertions.sol";
 
 import { LPOracle } from "src/LPOracle.sol";
 import { LPOracleFactory } from "src/LPOracleFactory.sol";
@@ -12,8 +11,8 @@ import { ICOWAMMPoolHelper } from "@cow-amm/interfaces/ICOWAMMPoolHelper.sol";
 import { AggregatorV3Interface } from "@cow-amm/interfaces/AggregatorV3Interface.sol";
 import { IERC20 } from "cowprotocol/contracts/interfaces/IERC20.sol";
 
-contract ForkTest is Addresses, Assertions, Test {
-    LPOracle internal oracle;
+contract ForkTest is Addresses, BaseTest {
+    LPOracle internal lpOracle;
     LPOracleFactory internal factory;
 
     IERC20 internal immutable FORK_POOL;
@@ -33,14 +32,14 @@ contract ForkTest is Addresses, Assertions, Test {
         FORK_FEED1 = AggregatorV3Interface(_feed1);
     }
 
-    function setUp() public virtual {
+    function setUp() public virtual override {
         // Fork Ethereum Mainnet at a specific block number.
         // Be careful with setting block numbers at times when the pool doesn't exist.
         vm.createSelectFork({ blockNumber: 21_422_754, urlOrAlias: "mainnet" });
 
         // Deploy contracts to the fork.
         factory = new LPOracleFactory();
-        oracle = LPOracle(factory.deployOracle(address(FORK_POOL), address(FORK_FEED0), address(FORK_FEED1)));
+        lpOracle = LPOracle(factory.deployOracle(address(FORK_POOL), address(FORK_FEED0), address(FORK_FEED1)));
 
         // Label contracts.
         labelContracts();
@@ -48,7 +47,7 @@ contract ForkTest is Addresses, Assertions, Test {
 
     function labelContracts() internal {
         vm.label(address(factory), "FACTORY");
-        vm.label(address(oracle), "ORACLE");
+        vm.label(address(lpOracle), "ORACLE");
         vm.label(address(FORK_POOL), "POOL");
         vm.label(address(FORK_TOKEN0), "TOKEN0");
         vm.label(address(FORK_TOKEN1), "TOKEN1");
