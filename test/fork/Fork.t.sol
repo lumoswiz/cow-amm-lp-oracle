@@ -21,6 +21,14 @@ contract ForkTest is Addresses, BaseTest {
     AggregatorV3Interface internal immutable FORK_FEED0;
     AggregatorV3Interface internal immutable FORK_FEED1;
 
+    uint256 internal INITIAL_POOL_TOKEN0_BALANCE;
+    uint256 internal INITIAL_POOL_TOKEN1_BALANCE;
+    uint256 internal INITIAL_POOL_LP_SUPPLY;
+    int256 internal INITIAL_FEED0_ANSWER;
+    int256 internal INITIAL_FEED1_ANSWER;
+    uint8 internal FEED0_DECIMALS;
+    uint8 internal FEED1_DECIMALS;
+
     constructor(address _token0, address _token1) {
         FORK_TOKEN0 = IERC20(_token0);
         FORK_TOKEN1 = IERC20(_token1);
@@ -43,6 +51,18 @@ contract ForkTest is Addresses, BaseTest {
 
         // Label contracts.
         labelContracts();
+
+        // Cache variables
+        INITIAL_POOL_TOKEN0_BALANCE = FORK_TOKEN0.balanceOf(address(FORK_POOL));
+        INITIAL_POOL_TOKEN1_BALANCE = FORK_TOKEN1.balanceOf(address(FORK_POOL));
+        INITIAL_POOL_LP_SUPPLY = FORK_POOL.totalSupply();
+
+        (, INITIAL_FEED0_ANSWER,,,) = FORK_FEED0.latestRoundData();
+
+        (, INITIAL_FEED1_ANSWER,,,) = FORK_FEED1.latestRoundData();
+
+        FEED0_DECIMALS = FORK_FEED0.decimals();
+        FEED1_DECIMALS = FORK_FEED1.decimals();
     }
 
     function labelContracts() internal {
