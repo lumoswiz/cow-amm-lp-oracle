@@ -3,6 +3,7 @@ pragma solidity >=0.8.25 < 0.9.0;
 
 import { Test } from "forge-std/Test.sol";
 import { OrderParams } from "test/utils/Types.sol";
+import { IERC20 } from "cowprotocol/contracts/interfaces/IERC20.sol";
 
 contract Utils is Test {
     /*----------------------------------------------------------*|
@@ -38,6 +39,10 @@ contract Utils is Test {
     /// @dev Helper to mock token pool balances.
     function mock_token_balanceOf(address token, address pool, uint256 balance) internal {
         vm.mockCall(token, abi.encodeWithSignature("balanceOf(address)", pool), abi.encode(balance));
+    }
+
+    function mock_token_balanceOf(IERC20 token, IERC20 pool, uint256 balance) internal {
+        vm.mockCall(address(token), abi.encodeWithSignature("balanceOf(address)", address(pool)), abi.encode(balance));
     }
 
     /*----------------------------------------------------------*|
