@@ -18,3 +18,5 @@ CalculateTVL.t.sol
                     │   └── it should revert
                     └── when no wadMul operation overflows in the TVL calculation
                         └── it should return the pool TVL cast as an unsigned 256 bit integer
+                        └── it should return expected TVL when both token decimals are the same
+                        └── it should return expected TVL when both token decimals are different
