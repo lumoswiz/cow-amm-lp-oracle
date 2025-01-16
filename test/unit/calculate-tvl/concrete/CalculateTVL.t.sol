@@ -174,8 +174,21 @@ contract CalculateTVL_Concrete_Unit_Test is BaseTest {
     /*   # ORACLE: _calculateTVL                                    */
     /* ------------------------------------------------------------ */
 
+    function test_ShouldRevert_TokenDecimalsGt18() external {
+        reinitOracle(19, 6);
+        setTokenBalances(1e19, 1e6);
+
+        vm.expectRevert(stdError.arithmeticError);
+        oracle.exposed_calculateTVL(1e8, 1e8);
+    }
+
+    modifier whenTokenDecimalsLtEq18() {
+        _;
+    }
+
     function test_CalculateTVL_SameDecimalTokens()
         external
+        whenTokenDecimalsLtEq18
         whenValidBalance0
         whenValidBalance1
         whenKDoesNotOverflow
@@ -198,6 +211,7 @@ contract CalculateTVL_Concrete_Unit_Test is BaseTest {
 
     function test_CalculateTVL_DifferentDecimalTokens()
         external
+        whenTokenDecimalsLtEq18
         whenValidBalance0
         whenValidBalance1
         whenKDoesNotOverflow
