@@ -155,8 +155,8 @@ contract LPOracle is AggregatorV3Interface {
     /// @param answer1 Price feed answer for token 1.
     function _calculateTVL(int256 answer0, int256 answer1) internal view returns (uint256 tvl) {
         /* Get pool k value */
-        int256 balance0 = int256(TOKEN0.balanceOf(POOL));
-        int256 balance1 = int256(TOKEN1.balanceOf(POOL));
+        int256 balance0 = int256(TOKEN0.balanceOf(POOL) * 10 ** (18 - TOKEN0_DECIMALS));
+        int256 balance1 = int256(TOKEN1.balanceOf(POOL) * 10 ** (18 - TOKEN1_DECIMALS));
         int256 k = wadMul(wadPow(wadDiv(balance0, balance1), WEIGHT0), balance1);
 
         /* Get weight factor */
