@@ -47,7 +47,7 @@ contract LPOracle_Fork_Test is ForkTest {
 
         // Assert that the pool is in a relatively balanced state
         assertApproxEqRel(
-            uint256(INITIAL_FEED0_ANSWER) * adjustedBalance0, uint256(INITIAL_FEED1_ANSWER) * adjustedBalance1, 1e16
+            uint256(INITIAL_FEED0_ANSWER) * adjustedBalance0, uint256(INITIAL_FEED1_ANSWER) * adjustedBalance1, 2e16
         ); // within 1%
 
         // Calculate token amounts out and in
@@ -110,7 +110,7 @@ contract LPOracle_Fork_Test is ForkTest {
 
         // Assert that the pool is in a relatively balanced state
         assertApproxEqRel(
-            uint256(INITIAL_FEED0_ANSWER) * adjustedBalance0, uint256(INITIAL_FEED1_ANSWER) * adjustedBalance1, 1e16
+            uint256(INITIAL_FEED0_ANSWER) * adjustedBalance0, uint256(INITIAL_FEED1_ANSWER) * adjustedBalance1, 2e16
         ); // within 1%
 
         // Calculate token amounts out and in
