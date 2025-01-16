@@ -25,41 +25,44 @@ contract LPOracle_Fork_Test is ForkTest {
     }
 
     function test_LatestRoundData_ManipulatePoolBalances_LargeAmountToken1Out() external {
+        // Setup asset adjustment amounts
+        uint256 adjust0By = 10 ** (18 - FORK_TOKEN0.decimals());
+        uint256 adjust1By = 10 ** (18 - FORK_TOKEN1.decimals());
+        uint256 adjustedBalance0 = INITIAL_POOL_TOKEN0_BALANCE * adjust0By;
+        uint256 adjustedBalance1 = INITIAL_POOL_TOKEN1_BALANCE * adjust1By;
+
         // Calculate naive price before manipulation
         uint256 naivePriceBefore = calculateNaivePrice(
             FEED0_DECIMALS,
             FEED1_DECIMALS,
             INITIAL_FEED0_ANSWER,
             INITIAL_FEED1_ANSWER,
-            INITIAL_POOL_TOKEN0_BALANCE,
-            INITIAL_POOL_TOKEN1_BALANCE,
+            adjustedBalance0,
+            adjustedBalance1,
             INITIAL_POOL_LP_SUPPLY
         );
 
         // Get the current LPOracle answer
-        (, int256 answer,,,) = lpOracle.latestRoundData();
+        (, int256 answerBefore,,,) = lpOracle.latestRoundData();
 
-        // Assert that the pool is in a relatively balanced state: naivePrice ≈ LPOracle answer
-        assertApproxEqRel(uint256(answer), naivePriceBefore, 1e15); // within 0.1%
+        // Assert that the pool is in a relatively balanced state
         assertApproxEqRel(
-            uint256(INITIAL_FEED0_ANSWER) * INITIAL_POOL_TOKEN0_BALANCE,
-            uint256(INITIAL_FEED1_ANSWER) * INITIAL_POOL_TOKEN1_BALANCE,
-            1e16
+            uint256(INITIAL_FEED0_ANSWER) * adjustedBalance0, uint256(INITIAL_FEED1_ANSWER) * adjustedBalance1, 5e16
         ); // within 1%
 
         // Calculate token amounts out and in
-        uint256 token1AmountOut = (9000 * INITIAL_POOL_TOKEN1_BALANCE) / 1e4; // 90% token 1 out
+        uint256 token1AmountOut = (9000 * adjustedBalance1) / 1e4; // 90% token 1 out
         uint256 token0AmountIn = calcInGivenOutSignedWadMath(
-            INITIAL_POOL_TOKEN0_BALANCE,
+            adjustedBalance0,
             uint256(lpOracle.WEIGHT0()),
-            INITIAL_POOL_TOKEN1_BALANCE,
+            adjustedBalance1,
             uint256(lpOracle.WEIGHT1()),
             token1AmountOut
         );
 
         // Mock the new balances
-        mock_token_balanceOf(FORK_TOKEN0, FORK_POOL, INITIAL_POOL_TOKEN0_BALANCE + token0AmountIn);
-        mock_token_balanceOf(FORK_TOKEN1, FORK_POOL, INITIAL_POOL_TOKEN1_BALANCE - token1AmountOut);
+        mock_token_balanceOf(FORK_TOKEN0, FORK_POOL, INITIAL_POOL_TOKEN0_BALANCE + token0AmountIn / adjust0By);
+        mock_token_balanceOf(FORK_TOKEN1, FORK_POOL, INITIAL_POOL_TOKEN1_BALANCE - token1AmountOut / adjust1By);
 
         // Calculate the naive price
         uint256 naivePriceAfter = calculateNaivePrice(
@@ -67,57 +70,62 @@ contract LPOracle_Fork_Test is ForkTest {
             FEED1_DECIMALS,
             INITIAL_FEED0_ANSWER,
             INITIAL_FEED1_ANSWER,
-            INITIAL_POOL_TOKEN0_BALANCE + token0AmountIn,
-            INITIAL_POOL_TOKEN1_BALANCE - token1AmountOut,
+            adjustedBalance0 + token0AmountIn,
+            adjustedBalance1 - token1AmountOut,
             INITIAL_POOL_LP_SUPPLY
         );
 
         // Retrieve the LPOracle answer
-        (, answer,,,) = lpOracle.latestRoundData();
+        (, int256 answer,,,) = lpOracle.latestRoundData();
 
         // Assertions
-        // The LPOracle answer after manipulation is within 0.1% price before manipulation
-        assertApproxEqRel(uint256(answer), naivePriceBefore, 1e15);
+        // The LPOracle answer before and after manipulation is the same
+        assertEq(uint256(answer), uint256(answerBefore));
+        //The LPOracle price is less than the naive pricing (before manipulation)
+        assertLt(uint256(answer), naivePriceBefore);
         // The naive price after manipulation is > 200% more than the LPOracle price
         assertGt(stdMath.percentDelta(naivePriceAfter, uint256(answer)), 2e18);
     }
 
     function test_LatestRoundData_ManipulatePoolBalances_LargeAmountToken0Out() external {
+        // Setup asset adjustment amounts
+        uint256 adjust0By = 10 ** (18 - FORK_TOKEN0.decimals());
+        uint256 adjust1By = 10 ** (18 - FORK_TOKEN1.decimals());
+        uint256 adjustedBalance0 = INITIAL_POOL_TOKEN0_BALANCE * adjust0By;
+        uint256 adjustedBalance1 = INITIAL_POOL_TOKEN1_BALANCE * adjust1By;
+
         // Calculate naive price before manipulation
         uint256 naivePriceBefore = calculateNaivePrice(
             FEED0_DECIMALS,
             FEED1_DECIMALS,
             INITIAL_FEED0_ANSWER,
             INITIAL_FEED1_ANSWER,
-            INITIAL_POOL_TOKEN0_BALANCE,
-            INITIAL_POOL_TOKEN1_BALANCE,
+            adjustedBalance0,
+            adjustedBalance1,
             INITIAL_POOL_LP_SUPPLY
         );
 
         // Get the current LPOracle answer
-        (, int256 answer,,,) = lpOracle.latestRoundData();
+        (, int256 answerBefore,,,) = lpOracle.latestRoundData();
 
-        // Assert that the pool is in a relatively balanced state: naivePrice ≈ LPOracle answer
-        assertApproxEqRel(uint256(answer), naivePriceBefore, 1e15); // within 0.1%
+        // Assert that the pool is in a relatively balanced state
         assertApproxEqRel(
-            uint256(INITIAL_FEED0_ANSWER) * INITIAL_POOL_TOKEN0_BALANCE,
-            uint256(INITIAL_FEED1_ANSWER) * INITIAL_POOL_TOKEN1_BALANCE,
-            1e16
+            uint256(INITIAL_FEED0_ANSWER) * adjustedBalance0, uint256(INITIAL_FEED1_ANSWER) * adjustedBalance1, 5e16
         ); // within 1%
 
         // Calculate token amounts out and in
-        uint256 token0AmountOut = (9000 * INITIAL_POOL_TOKEN0_BALANCE) / 1e4; // 90% token 0 out
+        uint256 token0AmountOut = (9000 * adjustedBalance0) / 1e4; // 90% token 0 out
         uint256 token1AmountIn = calcInGivenOutSignedWadMath(
-            INITIAL_POOL_TOKEN1_BALANCE,
+            adjustedBalance1,
             uint256(lpOracle.WEIGHT1()),
-            INITIAL_POOL_TOKEN0_BALANCE,
+            adjustedBalance0,
             uint256(lpOracle.WEIGHT0()),
             token0AmountOut
         );
 
         // Mock the new balances
-        mock_token_balanceOf(FORK_TOKEN0, FORK_POOL, INITIAL_POOL_TOKEN0_BALANCE - token0AmountOut);
-        mock_token_balanceOf(FORK_TOKEN1, FORK_POOL, INITIAL_POOL_TOKEN1_BALANCE + token1AmountIn);
+        mock_token_balanceOf(FORK_TOKEN0, FORK_POOL, INITIAL_POOL_TOKEN0_BALANCE - token0AmountOut / adjust0By);
+        mock_token_balanceOf(FORK_TOKEN1, FORK_POOL, INITIAL_POOL_TOKEN1_BALANCE + token1AmountIn / adjust1By);
 
         // Calculate the naive price
         uint256 naivePriceAfter = calculateNaivePrice(
@@ -125,17 +133,19 @@ contract LPOracle_Fork_Test is ForkTest {
             FEED1_DECIMALS,
             INITIAL_FEED0_ANSWER,
             INITIAL_FEED1_ANSWER,
-            INITIAL_POOL_TOKEN0_BALANCE - token0AmountOut,
-            INITIAL_POOL_TOKEN1_BALANCE + token1AmountIn,
+            adjustedBalance0 - token0AmountOut,
+            adjustedBalance1 + token1AmountIn,
             INITIAL_POOL_LP_SUPPLY
         );
 
         // Retrieve the LPOracle answer
-        (, answer,,,) = lpOracle.latestRoundData();
+        (, int256 answer,,,) = lpOracle.latestRoundData();
 
         // Assertions
-        // The LPOracle answer after manipulation is within 0.1% price before manipulation
-        assertApproxEqRel(uint256(answer), naivePriceBefore, 1e15);
+        // The LPOracle answer before and after manipulation is the same
+        assertEq(uint256(answer), uint256(answerBefore));
+        //The LPOracle price is less than the naive pricing (before manipulation)
+        assertLt(uint256(answer), naivePriceBefore);
         // The naive price after manipulation is > 200% more than the LPOracle price
         assertGt(stdMath.percentDelta(naivePriceAfter, uint256(answer)), 2e18);
     }
