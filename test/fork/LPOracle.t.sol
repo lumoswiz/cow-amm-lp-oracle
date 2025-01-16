@@ -79,8 +79,8 @@ contract LPOracle_Fork_Test is ForkTest {
         (, int256 answer,,,) = lpOracle.latestRoundData();
 
         // Assertions
-        // The LPOracle answer before and after manipulation is approximately the same
-        assertApproxEqRel(uint256(answer), uint256(answerBefore), 1e16);
+        // The LPOracle answer before and after manipulation is the same
+        assertEq(uint256(answer), uint256(answerBefore));
         //The LPOracle price is less than the naive pricing (before manipulation)
         assertLt(uint256(answer), naivePriceBefore);
         // The naive price after manipulation is > 200% more than the LPOracle price
@@ -142,10 +142,10 @@ contract LPOracle_Fork_Test is ForkTest {
         (, int256 answer,,,) = lpOracle.latestRoundData();
 
         // Assertions
+        // The LPOracle answer before and after manipulation is the same
+        assertEq(uint256(answer), uint256(answerBefore));
         //The LPOracle price is less than the naive pricing (before manipulation)
         assertLt(uint256(answer), naivePriceBefore);
-        // The LPOracle answer before and after manipulation is approximately the same
-        assertApproxEqRel(uint256(answer), uint256(answerBefore), 1e16);
         // The naive price after manipulation is > 200% more than the LPOracle price
         assertGt(stdMath.percentDelta(naivePriceAfter, uint256(answer)), 2e18);
     }
