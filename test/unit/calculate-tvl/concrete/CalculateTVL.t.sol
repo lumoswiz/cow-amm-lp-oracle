@@ -170,39 +170,52 @@ contract CalculateTVL_Concrete_Unit_Test is BaseTest {
         assertGt(maxK, 1e40); // relatively high maximum k value
     }
 
-    function test_calculateTVL_SameDecimalTokens()
+    /* ------------------------------------------------------------ */
+    /*   # ORACLE: _calculateTVL                                    */
+    /* ------------------------------------------------------------ */
+
+    function test_CalculateTVL_SameDecimalTokens()
         external
         whenValidBalance0
         whenValidBalance1
         whenKDoesNotOverflow
         whenAnswersPositive
     {
-        int256 wethUsdPrice = 3000;
-        (int256 price0, int256 price1) = (wethUsdPrice * 1e8, 1e8);
-        // Balanced Pool with
+        // Setup: answers
+        int256 answer0Base = 3000;
+        int256 answer1Base = 1;
+        (int256 answer0, int256 answer1) = (answer0Base * 1e8, answer1Base * 1e8);
+
+        // Mock token balances for the balanced 50/50 pool
         setTokenBalances(defaults.TOKEN0_BALANCE(), defaults.TOKEN1_BALANCE());
 
-        uint256 tvl = oracle.exposed_calculateTVL(price0, price1);
-        assertApproxEqAbs(tvl, (2 * uint256(wethUsdPrice)) * 1e8, 2);
+        // Calculate TVL
+        uint256 tvl = oracle.exposed_calculateTVL(answer0, answer1);
+
+        // Assertions
+        assertApproxEqAbs(tvl, (2 * uint256(answer0Base)) * 1e8, 2);
     }
 
-    function test_calculateTVL_DifferentDecimalTokens()
+    function test_CalculateTVL_DifferentDecimalTokens()
         external
         whenValidBalance0
         whenValidBalance1
         whenKDoesNotOverflow
         whenAnswersPositive
     {
-        int256 wethUsdPrice = 3000;
-        (int256 price0, int256 price1) = (wethUsdPrice * 1e8, 1e8);
-        reinitOracle(18, 6);
-        setTokenBalances(1e18, uint256(wethUsdPrice) * 1e6);
+        // Setup: answers
+        int256 answer0Base = 3000;
+        int256 answer1Base = 1;
+        (int256 answer0, int256 answer1) = (answer0Base * 1e8, answer1Base * 1e8);
 
-        uint256 tvl = oracle.exposed_calculateTVL(price0, price1);
-        assertApproxEqAbs(tvl, (2 * uint256(wethUsdPrice)) * 1e8, 2);
+        // Mocks
+        reinitOracle(18, 6);
+        setTokenBalances(1e18, uint256(answer0Base) * 1e6); // 1 unit token 0, 3000 units token 1
+
+        // Calculate TVL
+        uint256 tvl = oracle.exposed_calculateTVL(answer0, answer1);
+
+        // Assertions
+        assertApproxEqAbs(tvl, (2 * uint256(answer0Base)) * 1e8, 2);
     }
-    // @todo potential to do some analysis on the 'allowed' variable space
-    // Given pool weights and underlying assets in an expected price range,
-    //   - what are acceptable balances?
-    //   - how sensitive is the configuration to underlying feed decimal changes?
 }
