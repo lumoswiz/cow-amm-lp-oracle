@@ -25,6 +25,7 @@ contract IntegrationTest is Addresses, BaseTest {
     IERC20 internal POOL_WETH_UNI;
     AggregatorV3Interface internal FEED_WETH;
     AggregatorV3Interface internal FEED_UNI;
+    address internal constant USER = 0x78e96Be52e38b3FC3445A2ED34a6e586fFAb9631;
 
     // Aave
     IPoolAddressesProvider internal provider = IPoolAddressesProvider(0x2f39d218133AFaB8F2B819B1066c7E434Ad94E9e);
@@ -75,9 +76,12 @@ contract IntegrationTest is Addresses, BaseTest {
 
         // Configure WETH-UNI pool reserve
         _configureReserve();
-    }
 
-    function test_do() external { }
+        // Setup price feed
+        _setPriceFeed();
+
+        vm.stopPrank();
+    }
 
     function _initReserves() internal {
         ConfiguratorInputTypes.InitReserveInput[] memory inputs = new ConfiguratorInputTypes.InitReserveInput[](1);
@@ -117,5 +121,14 @@ contract IntegrationTest is Addresses, BaseTest {
         poolConfigurator.setReserveBorrowing(address(POOL_WETH_UNI), true);
         poolConfigurator.setReserveFlashLoaning(address(POOL_WETH_UNI), true);
         poolConfigurator.setReserveFactor(address(POOL_WETH_UNI), RESERVE_FACTOR);
+    }
+
+    function _setPriceFeed() internal {
+        address[] memory assets = new address[](1);
+        address[] memory sources = new address[](1);
+        assets[0] = address(POOL_WETH_UNI);
+        sources[0] = address(lpOracle);
+
+        aaveOracle.setAssetSources(assets, sources);
     }
 }
