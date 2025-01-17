@@ -42,6 +42,12 @@ contract IntegrationTest is Addresses, BaseTest {
     address internal constant INCENTIVES_CONTROLLER = 0x8164Cc65827dcFe994AB23944CBC90e0aa80bFcb;
     address internal constant TREASURY = 0x464C71f6c2F760DdA6093dCB91C24c39e5d6e18c;
 
+    // Reserve configuration params
+    uint256 internal constant LTV = 6600;
+    uint256 internal constant LIQUIDATION_THRESHOLD = 7100;
+    uint256 internal constant LIQUIDATION_BONUS = 10_500;
+    uint256 internal constant RESERVE_FACTOR = 2000;
+
     function setUp() public virtual override {
         // Fork
         vm.createSelectFork({ blockNumber: 21_643_099, urlOrAlias: "mainnet" });
@@ -66,7 +72,12 @@ contract IntegrationTest is Addresses, BaseTest {
 
         // Initialise WETH-UNI pool as reserve
         _initReserves();
+
+        // Configure WETH-UNI pool reserve
+        _configureReserve();
     }
+
+    function test_do() external { }
 
     function _initReserves() internal {
         ConfiguratorInputTypes.InitReserveInput[] memory inputs = new ConfiguratorInputTypes.InitReserveInput[](1);
@@ -95,5 +106,16 @@ contract IntegrationTest is Addresses, BaseTest {
             params: "",
             interestRateData: interestRateData
         });
+        inputs[0] = input;
+        poolConfigurator.initReserves(inputs);
+    }
+
+    function _configureReserve() internal {
+        poolConfigurator.configureReserveAsCollateral(
+            address(POOL_WETH_UNI), LTV, LIQUIDATION_THRESHOLD, LIQUIDATION_BONUS
+        );
+        poolConfigurator.setReserveBorrowing(address(POOL_WETH_UNI), true);
+        poolConfigurator.setReserveFlashLoaning(address(POOL_WETH_UNI), true);
+        poolConfigurator.setReserveFactor(address(POOL_WETH_UNI), RESERVE_FACTOR);
     }
 }
