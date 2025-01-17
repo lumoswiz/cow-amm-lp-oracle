@@ -4,6 +4,7 @@ pragma solidity >=0.8.25 < 0.9.0;
 import { BaseTest } from "test/Base.t.sol";
 import { Addresses } from "test/utils/Addresses.sol";
 
+import { AaveLPOracle } from "test/integration/AaveLPOracle.sol";
 import { LPOracle } from "src/LPOracle.sol";
 import { LPOracleFactory } from "src/LPOracleFactory.sol";
 import { IERC20 } from "cowprotocol/contracts/interfaces/IERC20.sol";
@@ -13,13 +14,12 @@ import { IPoolAddressesProvider } from "test/integration/aave-v3-contracts/inter
 import { IPool } from "test/integration/aave-v3-contracts/interfaces/IPool.sol";
 import { IPoolConfigurator } from "test/integration/aave-v3-contracts/interfaces/IPoolConfigurator.sol";
 import { IAaveOracle } from "test/integration/aave-v3-contracts/interfaces/IAaveOracle.sol";
-import { IDefaultInterestRateStrategyV2 } from
-    "test/integration/aave-v3-contracts/interfaces/IDefaultInterestRateStrategyV2.sol";
 
 import { ConfiguratorInputTypes } from "test/integration/aave-v3-contracts/types/ConfiguratorInputTypes.sol";
 
 contract IntegrationTest is Addresses, BaseTest {
     // LPOracle
+    AaveLPOracle internal aaveLPOracle;
     LPOracle internal lpOracle;
     LPOracleFactory internal factory;
     IERC20 internal POOL_WETH_UNI;
@@ -62,6 +62,7 @@ contract IntegrationTest is Addresses, BaseTest {
         // Deploy contracts to the fork.
         factory = new LPOracleFactory();
         lpOracle = LPOracle(factory.deployOracle(_pool, _feed0, _feed1));
+        aaveLPOracle = new AaveLPOracle(address(lpOracle));
 
         // Aave contracts
         pool = IPool(provider.getPool());
@@ -79,8 +80,13 @@ contract IntegrationTest is Addresses, BaseTest {
 
         // Setup price feed
         _setPriceFeed();
-
         vm.stopPrank();
+
+        // Make a holder of the WETH-UNI pool tokens the default caller for this suite
+        vm.startPrank(USER);
+
+        // Approval
+        POOL_WETH_UNI.approve(address(pool), type(uint256).max);
     }
 
     /* ------------------------------------------------------------ */
@@ -131,7 +137,7 @@ contract IntegrationTest is Addresses, BaseTest {
         address[] memory assets = new address[](1);
         address[] memory sources = new address[](1);
         assets[0] = address(POOL_WETH_UNI);
-        sources[0] = address(lpOracle);
+        sources[0] = address(aaveLPOracle);
 
         aaveOracle.setAssetSources(assets, sources);
     }
@@ -139,4 +145,10 @@ contract IntegrationTest is Addresses, BaseTest {
     /* ------------------------------------------------------------ */
     /*   # TESTS                                                    */
     /* ------------------------------------------------------------ */
+
+    function test_AaveOracle_GetAssetPrice() external {
+        (, int256 answer,,,) = lpOracle.latestRoundData();
+        uint256 price = aaveOracle.getAssetPrice(address(POOL_WETH_UNI));
+        assertEq(uint256(answer), price);
+    }
 }
