@@ -83,6 +83,10 @@ contract IntegrationTest is Addresses, BaseTest {
         vm.stopPrank();
     }
 
+    /* ------------------------------------------------------------ */
+    /*   # SETUP HELPERS                                            */
+    /* ------------------------------------------------------------ */
+
     function _initReserves() internal {
         ConfiguratorInputTypes.InitReserveInput[] memory inputs = new ConfiguratorInputTypes.InitReserveInput[](1);
         string memory name = POOL_WETH_UNI.name();
@@ -131,4 +135,8 @@ contract IntegrationTest is Addresses, BaseTest {
 
         aaveOracle.setAssetSources(assets, sources);
     }
+
+    /* ------------------------------------------------------------ */
+    /*   # TESTS                                                    */
+    /* ------------------------------------------------------------ */
 }
