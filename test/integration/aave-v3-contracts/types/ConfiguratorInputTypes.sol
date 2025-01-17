@@ -1,12 +1,11 @@
-// SPDX-License-Identifier: BUSL-1.1
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 library ConfiguratorInputTypes {
     struct InitReserveInput {
         address aTokenImpl;
-        address stableDebtTokenImpl;
         address variableDebtTokenImpl;
-        uint8 underlyingAssetDecimals;
+        bool useVirtualBalance;
         address interestRateStrategyAddress;
         address underlyingAsset;
         address treasury;
@@ -15,9 +14,8 @@ library ConfiguratorInputTypes {
         string aTokenSymbol;
         string variableDebtTokenName;
         string variableDebtTokenSymbol;
-        string stableDebtTokenName;
-        string stableDebtTokenSymbol;
         bytes params;
+        bytes interestRateData;
     }
 
     struct UpdateATokenInput {

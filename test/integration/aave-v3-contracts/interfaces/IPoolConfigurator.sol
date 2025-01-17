@@ -1,7 +1,8 @@
-// SPDX-License-Identifier: AGPL-3.0
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import { ConfiguratorInputTypes } from "../types/ConfiguratorInputTypes.sol"; // modified for this test suite
+import { ConfiguratorInputTypes } from "../types/ConfiguratorInputTypes.sol";
+import { IDefaultInterestRateStrategyV2 } from "./IDefaultInterestRateStrategyV2.sol";
 
 /**
  * @title IPoolConfigurator
@@ -13,7 +14,7 @@ interface IPoolConfigurator {
      * @dev Emitted when a reserve is initialized.
      * @param asset The address of the underlying asset of the reserve
      * @param aToken The address of the associated aToken contract
-     * @param stableDebtToken The address of the associated stable rate debt token
+     * @param stableDebtToken, DEPRECATED in v3.2.0
      * @param variableDebtToken The address of the associated variable rate debt token
      * @param interestRateStrategyAddress The address of the interest rate strategy for the reserve
      */
@@ -40,6 +41,13 @@ interface IPoolConfigurator {
     event ReserveFlashLoaning(address indexed asset, bool enabled);
 
     /**
+     * @dev Emitted when the ltv is set for the frozen asset.
+     * @param asset The address of the underlying asset of the reserve
+     * @param ltv The loan to value of the asset when used as collateral
+     */
+    event PendingLtvChanged(address indexed asset, uint256 ltv);
+
+    /**
      * @dev Emitted when the collateralization risk parameters for the specified asset are updated.
      * @param asset The address of the underlying asset of the reserve
      * @param ltv The loan to value of the asset when used as collateral
@@ -50,13 +58,6 @@ interface IPoolConfigurator {
     event CollateralConfigurationChanged(
         address indexed asset, uint256 ltv, uint256 liquidationThreshold, uint256 liquidationBonus
     );
-
-    /**
-     * @dev Emitted when stable rate borrowing is enabled or disabled on a reserve
-     * @param asset The address of the underlying asset of the reserve
-     * @param enabled True if stable rate borrowing is enabled, false otherwise
-     */
-    event ReserveStableRateBorrowing(address indexed asset, bool enabled);
 
     /**
      * @dev Emitted when a reserve is activated or deactivated
@@ -118,6 +119,19 @@ interface IPoolConfigurator {
     event LiquidationProtocolFeeChanged(address indexed asset, uint256 oldFee, uint256 newFee);
 
     /**
+     * @dev Emitted when the liquidation grace period is updated.
+     * @param asset The address of the underlying asset of the reserve
+     * @param gracePeriodUntil Timestamp until when liquidations will not be allowed post-unpause
+     */
+    event LiquidationGracePeriodChanged(address indexed asset, uint40 gracePeriodUntil);
+
+    /**
+     * @dev Emitted when the liquidation grace period is disabled.
+     * @param asset The address of the underlying asset of the reserve
+     */
+    event LiquidationGracePeriodDisabled(address indexed asset);
+
+    /**
      * @dev Emitted when the unbacked mint cap of a reserve is updated.
      * @param asset The address of the underlying asset of the reserve
      * @param oldUnbackedMintCap The old unbacked mint cap
@@ -126,20 +140,28 @@ interface IPoolConfigurator {
     event UnbackedMintCapChanged(address indexed asset, uint256 oldUnbackedMintCap, uint256 newUnbackedMintCap);
 
     /**
-     * @dev Emitted when the category of an asset in eMode is changed.
+     * @dev Emitted when an collateral configuration of an asset in an eMode is changed.
      * @param asset The address of the underlying asset of the reserve
-     * @param oldCategoryId The old eMode asset category
-     * @param newCategoryId The new eMode asset category
+     * @param categoryId The eMode category
+     * @param collateral True if the asset is enabled as collateral in the eMode, false otherwise.
      */
-    event EModeAssetCategoryChanged(address indexed asset, uint8 oldCategoryId, uint8 newCategoryId);
+    event AssetCollateralInEModeChanged(address indexed asset, uint8 categoryId, bool collateral);
 
     /**
-     * @dev Emitted when a new eMode category is added.
+     * @dev Emitted when the borrowable configuration of an asset in an eMode changed.
+     * @param asset The address of the underlying asset of the reserve
+     * @param categoryId The eMode category
+     * @param borrowable True if the asset is enabled as borrowable in the eMode, false otherwise.
+     */
+    event AssetBorrowableInEModeChanged(address indexed asset, uint8 categoryId, bool borrowable);
+
+    /**
+     * @dev Emitted when a new eMode category is added or an existing category is altered.
      * @param categoryId The new eMode category id
      * @param ltv The ltv for the asset category in eMode
      * @param liquidationThreshold The liquidationThreshold for the asset category in eMode
      * @param liquidationBonus The liquidationBonus for the asset category in eMode
-     * @param oracle The optional address of the price oracle specific for this category
+     * @param oracle DEPRECATED in v3.2.0
      * @param label A human readable identifier for the category
      */
     event EModeCategoryAdded(
@@ -160,20 +182,19 @@ interface IPoolConfigurator {
     event ReserveInterestRateStrategyChanged(address indexed asset, address oldStrategy, address newStrategy);
 
     /**
+     * @dev Emitted when the data of a reserve interest strategy contract is updated.
+     * @param asset The address of the underlying asset of the reserve
+     * @param data abi encoded data
+     */
+    event ReserveInterestRateDataChanged(address indexed asset, address indexed strategy, bytes data);
+
+    /**
      * @dev Emitted when an aToken implementation is upgraded.
      * @param asset The address of the underlying asset of the reserve
      * @param proxy The aToken proxy address
      * @param implementation The new aToken implementation
      */
     event ATokenUpgraded(address indexed asset, address indexed proxy, address indexed implementation);
-
-    /**
-     * @dev Emitted when the implementation of a stable debt token is upgraded.
-     * @param asset The address of the underlying asset of the reserve
-     * @param proxy The stable debt token proxy address
-     * @param implementation The new aToken implementation
-     */
-    event StableDebtTokenUpgraded(address indexed asset, address indexed proxy, address indexed implementation);
 
     /**
      * @dev Emitted when the implementation of a variable debt token is upgraded.
@@ -231,6 +252,8 @@ interface IPoolConfigurator {
 
     /**
      * @notice Initializes multiple reserves.
+     * @dev param useVirtualBalance of the input struct should be true for all normal assets and should be false
+     *  only in special cases (ex. GHO) where an asset is minted instead of supplied.
      * @param input The array of initialization parameters
      */
     function initReserves(ConfiguratorInputTypes.InitReserveInput[] calldata input) external;
@@ -242,12 +265,6 @@ interface IPoolConfigurator {
     function updateAToken(ConfiguratorInputTypes.UpdateATokenInput calldata input) external;
 
     /**
-     * @notice Updates the stable debt token implementation for the reserve.
-     * @param input The stableDebtToken update parameters
-     */
-    function updateStableDebtToken(ConfiguratorInputTypes.UpdateDebtTokenInput calldata input) external;
-
-    /**
      * @notice Updates the variable debt token implementation for the asset.
      * @param input The variableDebtToken update parameters
      */
@@ -255,7 +272,6 @@ interface IPoolConfigurator {
 
     /**
      * @notice Configures borrowing on a reserve.
-     * @dev Can only be disabled (set to false) if stable borrowing is disabled
      * @param asset The address of the underlying asset of the reserve
      * @param enabled True if borrowing needs to be enabled, false otherwise
      */
@@ -278,14 +294,6 @@ interface IPoolConfigurator {
         uint256 liquidationBonus
     )
         external;
-
-    /**
-     * @notice Enable or disable stable rate borrowing on a reserve.
-     * @dev Can only be enabled (set to true) if borrowing is enabled
-     * @param asset The address of the underlying asset of the reserve
-     * @param enabled True if stable rate borrowing needs to be enabled, false otherwise
-     */
-    function setReserveStableRateBorrowing(address asset, bool enabled) external;
 
     /**
      * @notice Enable or disable flashloans on a reserve
@@ -325,8 +333,28 @@ interface IPoolConfigurator {
      * swap interest rate, liquidate, atoken transfers).
      * @param asset The address of the underlying asset of the reserve
      * @param paused True if pausing the reserve, false if unpausing
+     * @param gracePeriod Count of seconds after unpause during which liquidations will not be available
+     *   - Only applicable whenever unpausing (`paused` as false)
+     *   - Passing 0 means no grace period
+     *   - Capped to maximum MAX_GRACE_PERIOD
+     */
+    function setReservePause(address asset, bool paused, uint40 gracePeriod) external;
+
+    /**
+     * @notice Pauses a reserve. A paused reserve does not allow any interaction (supply, borrow, repay,
+     * swap interest rate, liquidate, atoken transfers).
+     * @dev Version with no grace period
+     * @param asset The address of the underlying asset of the reserve
+     * @param paused True if pausing the reserve, false if unpausing
      */
     function setReservePause(address asset, bool paused) external;
+
+    /**
+     * @notice Disables liquidation grace period for the asset. The liquidation grace period is set in the past
+     * so that liquidations are allowed for the asset.
+     * @param asset The address of the underlying asset of the reserve
+     */
+    function disableLiquidationGracePeriod(address asset) external;
 
     /**
      * @notice Updates the reserve factor of a reserve.
@@ -339,12 +367,39 @@ interface IPoolConfigurator {
      * @notice Sets the interest rate strategy of a reserve.
      * @param asset The address of the underlying asset of the reserve
      * @param newRateStrategyAddress The address of the new interest strategy contract
+     * @param rateData bytes-encoded rate data. In this format in order to allow the rate strategy contract
+     *  to de-structure custom data
      */
-    function setReserveInterestRateStrategyAddress(address asset, address newRateStrategyAddress) external;
+    function setReserveInterestRateStrategyAddress(
+        address asset,
+        address newRateStrategyAddress,
+        bytes calldata rateData
+    )
+        external;
+
+    /**
+     * @notice Sets interest rate data for a reserve
+     * @param asset The address of the underlying asset of the reserve
+     * @param rateData bytes-encoded rate data. In this format in order to allow the rate strategy contract
+     *  to de-structure custom data
+     */
+    function setReserveInterestRateData(address asset, bytes calldata rateData) external;
 
     /**
      * @notice Pauses or unpauses all the protocol reserves. In the paused state all the protocol interactions
      * are suspended.
+     * @param paused True if protocol needs to be paused, false otherwise
+     * @param gracePeriod Count of seconds after unpause during which liquidations will not be available
+     *   - Only applicable whenever unpausing (`paused` as false)
+     *   - Passing 0 means no grace period
+     *   - Capped to maximum MAX_GRACE_PERIOD
+     */
+    function setPoolPause(bool paused, uint40 gracePeriod) external;
+
+    /**
+     * @notice Pauses or unpauses all the protocol reserves. In the paused state all the protocol interactions
+     * are suspended.
+     * @dev Version with no grace period
      * @param paused True if protocol needs to be paused, false otherwise
      */
     function setPoolPause(bool paused) external;
@@ -378,24 +433,28 @@ interface IPoolConfigurator {
     function setUnbackedMintCap(address asset, uint256 newUnbackedMintCap) external;
 
     /**
-     * @notice Assign an efficiency mode (eMode) category to asset.
+     * @notice Enables/disables an asset to be borrowable in a selected eMode.
+     * - eMode.borrowable always has less priority then reserve.borrowable
      * @param asset The address of the underlying asset of the reserve
-     * @param newCategoryId The new category id of the asset
+     * @param categoryId The eMode categoryId
+     * @param borrowable True if the asset should be borrowable in the given eMode category, false otherwise.
      */
-    function setAssetEModeCategory(address asset, uint8 newCategoryId) external;
+    function setAssetBorrowableInEMode(address asset, uint8 categoryId, bool borrowable) external;
 
     /**
-     * @notice Adds a new efficiency mode (eMode) category.
-     * @dev If zero is provided as oracle address, the default asset oracles will be used to compute the overall debt
-     * and
-     * overcollateralization of the users using this category.
-     * @dev The new ltv and liquidation threshold must be greater than the base
-     * ltvs and liquidation thresholds of all assets within the eMode category
+     * @notice Enables/disables an asset to be collateral in a selected eMode.
+     * @param asset The address of the underlying asset of the reserve
+     * @param categoryId The eMode categoryId
+     * @param collateral True if the asset should be collateral in the given eMode category, false otherwise.
+     */
+    function setAssetCollateralInEMode(address asset, uint8 categoryId, bool collateral) external;
+
+    /**
+     * @notice Adds a new efficiency mode (eMode) category or alters a existing one.
      * @param categoryId The id of the category to be configured
      * @param ltv The ltv associated with the category
      * @param liquidationThreshold The liquidation threshold associated with the category
      * @param liquidationBonus The liquidation bonus associated with the category
-     * @param oracle The oracle associated with the category
      * @param label A label identifying the category
      */
     function setEModeCategory(
@@ -403,7 +462,6 @@ interface IPoolConfigurator {
         uint16 ltv,
         uint16 liquidationThreshold,
         uint16 liquidationBonus,
-        address oracle,
         string calldata label
     )
         external;
@@ -450,4 +508,20 @@ interface IPoolConfigurator {
      * @param siloed The new siloed borrowing state
      */
     function setSiloedBorrowing(address asset, bool siloed) external;
+
+    /**
+     * @notice Gets pending ltv value
+     * @param asset The new siloed borrowing state
+     */
+    function getPendingLtv(address asset) external view returns (uint256);
+
+    /**
+     * @notice Gets the address of the external ConfiguratorLogic
+     */
+    function getConfiguratorLogic() external view returns (address);
+
+    /**
+     * @notice Gets the maximum liquidations grace period allowed, in seconds
+     */
+    function MAX_GRACE_PERIOD() external view returns (uint40);
 }

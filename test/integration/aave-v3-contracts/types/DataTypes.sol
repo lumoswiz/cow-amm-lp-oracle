@@ -1,8 +1,12 @@
-// SPDX-License-Identifier: BUSL-1.1
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 library DataTypes {
-    struct ReserveData {
+    /**
+     * This exists specifically to maintain the `getReserveData()` interface, since the new, internal
+     * `ReserveData` struct includes the reserve's `virtualUnderlyingBalance`.
+     */
+    struct ReserveDataLegacy {
         //stores the reserve configuration
         ReserveConfigurationMap configuration;
         //the liquidity index. Expressed in ray
@@ -13,7 +17,7 @@ library DataTypes {
         uint128 variableBorrowIndex;
         //the current variable borrow rate. Expressed in ray
         uint128 currentVariableBorrowRate;
-        //the current stable borrow rate. Expressed in ray
+        // DEPRECATED on v3.2.0
         uint128 currentStableBorrowRate;
         //timestamp of last update
         uint40 lastUpdateTimestamp;
@@ -21,7 +25,7 @@ library DataTypes {
         uint16 id;
         //aToken address
         address aTokenAddress;
-        //stableDebtToken address
+        // DEPRECATED on v3.2.0
         address stableDebtTokenAddress;
         //variableDebtToken address
         address variableDebtTokenAddress;
@@ -35,6 +39,43 @@ library DataTypes {
         uint128 isolationModeTotalDebt;
     }
 
+    struct ReserveData {
+        //stores the reserve configuration
+        ReserveConfigurationMap configuration;
+        //the liquidity index. Expressed in ray
+        uint128 liquidityIndex;
+        //the current supply rate. Expressed in ray
+        uint128 currentLiquidityRate;
+        //variable borrow index. Expressed in ray
+        uint128 variableBorrowIndex;
+        //the current variable borrow rate. Expressed in ray
+        uint128 currentVariableBorrowRate;
+        // DEPRECATED on v3.2.0
+        uint128 __deprecatedStableBorrowRate;
+        //timestamp of last update
+        uint40 lastUpdateTimestamp;
+        //the id of the reserve. Represents the position in the list of the active reserves
+        uint16 id;
+        //timestamp until when liquidations are not allowed on the reserve, if set to past liquidations will be allowed
+        uint40 liquidationGracePeriodUntil;
+        //aToken address
+        address aTokenAddress;
+        // DEPRECATED on v3.2.0
+        address __deprecatedStableDebtTokenAddress;
+        //variableDebtToken address
+        address variableDebtTokenAddress;
+        //address of the interest rate strategy
+        address interestRateStrategyAddress;
+        //the current treasury balance, scaled
+        uint128 accruedToTreasury;
+        //the outstanding unbacked aTokens minted through the bridging feature
+        uint128 unbacked;
+        //the outstanding debt borrowed against this asset in isolation mode
+        uint128 isolationModeTotalDebt;
+        //the amount of underlying accounted for by the protocol
+        uint128 virtualUnderlyingBalance;
+    }
+
     struct ReserveConfigurationMap {
         //bit 0-15: LTV
         //bit 16-31: Liq. threshold
@@ -43,19 +84,20 @@ library DataTypes {
         //bit 56: reserve is active
         //bit 57: reserve is frozen
         //bit 58: borrowing is enabled
-        //bit 59: stable rate borrowing enabled
+        //bit 59: DEPRECATED: stable rate borrowing enabled
         //bit 60: asset is paused
         //bit 61: borrowing in isolation mode is enabled
         //bit 62: siloed borrowing enabled
         //bit 63: flashloaning enabled
         //bit 64-79: reserve factor
-        //bit 80-115 borrow cap in whole tokens, borrowCap == 0 => no cap
-        //bit 116-151 supply cap in whole tokens, supplyCap == 0 => no cap
-        //bit 152-167 liquidation protocol fee
-        //bit 168-175 eMode category
-        //bit 176-211 unbacked mint cap in whole tokens, unbackedMintCap == 0 => minting disabled
-        //bit 212-251 debt ceiling for isolation mode with (ReserveConfiguration::DEBT_CEILING_DECIMALS) decimals
-        //bit 252-255 unused
+        //bit 80-115: borrow cap in whole tokens, borrowCap == 0 => no cap
+        //bit 116-151: supply cap in whole tokens, supplyCap == 0 => no cap
+        //bit 152-167: liquidation protocol fee
+        //bit 168-175: DEPRECATED: eMode category
+        //bit 176-211: unbacked mint cap in whole tokens, unbackedMintCap == 0 => minting disabled
+        //bit 212-251: debt ceiling for isolation mode with (ReserveConfiguration::DEBT_CEILING_DECIMALS) decimals
+        //bit 252: virtual accounting is enabled for the reserve
+        //bit 253-255 unused
         uint256 data;
     }
 
@@ -68,30 +110,49 @@ library DataTypes {
         uint256 data;
     }
 
+    // DEPRECATED: kept for backwards compatibility, might be removed in a future version
+    struct EModeCategoryLegacy {
+        // each eMode category has a custom ltv and liquidation threshold
+        uint16 ltv;
+        uint16 liquidationThreshold;
+        uint16 liquidationBonus;
+        // DEPRECATED
+        address priceSource;
+        string label;
+    }
+
+    struct CollateralConfig {
+        uint16 ltv;
+        uint16 liquidationThreshold;
+        uint16 liquidationBonus;
+    }
+
+    struct EModeCategoryBaseConfiguration {
+        uint16 ltv;
+        uint16 liquidationThreshold;
+        uint16 liquidationBonus;
+        string label;
+    }
+
     struct EModeCategory {
         // each eMode category has a custom ltv and liquidation threshold
         uint16 ltv;
         uint16 liquidationThreshold;
         uint16 liquidationBonus;
-        // each eMode category may or may not have a custom oracle to override the individual assets price oracles
-        address priceSource;
+        uint128 collateralBitmap;
         string label;
+        uint128 borrowableBitmap;
     }
 
     enum InterestRateMode {
         NONE,
-        STABLE,
+        __DEPRECATED,
         VARIABLE
     }
 
     struct ReserveCache {
         uint256 currScaledVariableDebt;
         uint256 nextScaledVariableDebt;
-        uint256 currPrincipalStableDebt;
-        uint256 currAvgStableBorrowRate;
-        uint256 currTotalStableDebt;
-        uint256 nextAvgStableBorrowRate;
-        uint256 nextTotalStableDebt;
         uint256 currLiquidityIndex;
         uint256 nextLiquidityIndex;
         uint256 currVariableBorrowIndex;
@@ -101,10 +162,8 @@ library DataTypes {
         uint256 reserveFactor;
         ReserveConfigurationMap reserveConfiguration;
         address aTokenAddress;
-        address stableDebtTokenAddress;
         address variableDebtTokenAddress;
         uint40 reserveLastUpdateTimestamp;
-        uint40 stableDebtLastUpdateTimestamp;
     }
 
     struct ExecuteLiquidationCallParams {
@@ -134,7 +193,6 @@ library DataTypes {
         InterestRateMode interestRateMode;
         uint16 referralCode;
         bool releaseUnderlying;
-        uint256 maxStableRateBorrowSizePercent;
         uint256 reservesCount;
         address oracle;
         uint8 userEModeCategory;
@@ -186,9 +244,9 @@ library DataTypes {
         uint16 referralCode;
         uint256 flashLoanPremiumToProtocol;
         uint256 flashLoanPremiumTotal;
-        uint256 maxStableRateBorrowSizePercent;
         uint256 reservesCount;
         address addressesProvider;
+        address pool;
         uint8 userEModeCategory;
         bool isAuthorizedFlashBorrower;
     }
@@ -227,7 +285,6 @@ library DataTypes {
         address userAddress;
         uint256 amount;
         InterestRateMode interestRateMode;
-        uint256 maxStableLoanPercent;
         uint256 reservesCount;
         address oracle;
         uint8 userEModeCategory;
@@ -248,18 +305,16 @@ library DataTypes {
         uint256 unbacked;
         uint256 liquidityAdded;
         uint256 liquidityTaken;
-        uint256 totalStableDebt;
-        uint256 totalVariableDebt;
-        uint256 averageStableBorrowRate;
+        uint256 totalDebt;
         uint256 reserveFactor;
         address reserve;
-        address aToken;
+        bool usingVirtualBalance;
+        uint256 virtualUnderlyingBalance;
     }
 
     struct InitReserveParams {
         address asset;
         address aTokenAddress;
-        address stableDebtAddress;
         address variableDebtAddress;
         address interestRateStrategyAddress;
         uint16 reservesCount;
