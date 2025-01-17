@@ -13,6 +13,8 @@ import { IPoolAddressesProvider } from "test/integration/aave-v3-contracts/inter
 import { IPool } from "test/integration/aave-v3-contracts/interfaces/IPool.sol";
 import { IPoolConfigurator } from "test/integration/aave-v3-contracts/interfaces/IPoolConfigurator.sol";
 import { IAaveOracle } from "test/integration/aave-v3-contracts/interfaces/IAaveOracle.sol";
+import { IDefaultInterestRateStrategyV2 } from
+    "test/integration/aave-v3-contracts/interfaces/IDefaultInterestRateStrategyV2.sol";
 
 import { ConfiguratorInputTypes } from "test/integration/aave-v3-contracts/types/ConfiguratorInputTypes.sol";
 
@@ -58,5 +60,40 @@ contract IntegrationTest is Addresses, BaseTest {
         pool = IPool(provider.getPool());
         poolConfigurator = IPoolConfigurator(provider.getPoolConfigurator());
         aaveOracle = IAaveOracle(provider.getPriceOracle());
+
+        // Start prank as pool admin
+        vm.startPrank(admin);
+
+        // Initialise WETH-UNI pool as reserve
+        _initReserves();
+    }
+
+    function _initReserves() internal {
+        ConfiguratorInputTypes.InitReserveInput[] memory inputs = new ConfiguratorInputTypes.InitReserveInput[](1);
+        string memory name = POOL_WETH_UNI.name();
+        string memory symbol = POOL_WETH_UNI.symbol();
+        bytes memory interestRateData = abi.encode(
+            IDefaultInterestRateStrategyV2.InterestRateData({
+                optimalUsageRatio: 9000,
+                baseVariableBorrowRate: 0,
+                variableRateSlope1: 270,
+                variableRateSlope2: 8000
+            })
+        );
+        ConfiguratorInputTypes.InitReserveInput memory input = ConfiguratorInputTypes.InitReserveInput({
+            aTokenImpl: A_TOKEN_IMPL,
+            variableDebtTokenImpl: VARIABLE_DEBT_TOKEN_IMPL,
+            useVirtualBalance: false,
+            interestRateStrategyAddress: INTEREST_RATE_STRATEGY,
+            underlyingAsset: address(POOL_WETH_UNI),
+            treasury: TREASURY,
+            incentivesController: INCENTIVES_CONTROLLER,
+            aTokenName: string.concat("Aave ", name),
+            aTokenSymbol: string.concat("a", symbol),
+            variableDebtTokenName: string.concat("Aave Variable Debt ", name),
+            variableDebtTokenSymbol: string.concat("variableDebt", symbol),
+            params: "",
+            interestRateData: interestRateData
+        });
     }
 }
