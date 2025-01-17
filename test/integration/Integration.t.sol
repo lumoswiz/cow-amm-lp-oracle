@@ -16,6 +16,7 @@ import { IPoolConfigurator } from "test/integration/aave-v3-contracts/interfaces
 import { IAaveOracle } from "test/integration/aave-v3-contracts/interfaces/IAaveOracle.sol";
 import { IDefaultInterestRateStrategyV2 } from
     "test/integration/aave-v3-contracts/interfaces/IDefaultInterestRateStrategyV2.sol";
+import { IPoolDataProvider } from "test/integration/aave-v3-contracts/interfaces/IPoolDataProvider.sol";
 
 import { ConfiguratorInputTypes } from "test/integration/aave-v3-contracts/types/ConfiguratorInputTypes.sol";
 
