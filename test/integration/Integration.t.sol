@@ -28,13 +28,17 @@ contract IntegrationTest is Addresses, BaseTest {
     IERC20 internal POOL_WETH_UNI;
     AggregatorV3Interface internal FEED_WETH;
     AggregatorV3Interface internal FEED_UNI;
-    address internal constant USER = 0x78e96Be52e38b3FC3445A2ED34a6e586fFAb9631;
+
+    // WETH-UNI pool params
+    uint256 internal INITIAL_POOL_TOKEN0_BALANCE;
+    uint256 internal INITIAL_POOL_TOKEN1_BALANCE;
 
     // Aave
     IPoolAddressesProvider internal provider = IPoolAddressesProvider(0x2f39d218133AFaB8F2B819B1066c7E434Ad94E9e);
     IPool internal pool;
     IPoolConfigurator internal poolConfigurator;
     IAaveOracle internal aaveOracle;
+    IPoolDataProvider poolDataProvider;
 
     // Pool admin
     address internal constant admin = 0x5300A1a15135EA4dc7aD5a167152C01EFc9b192A;
@@ -52,6 +56,12 @@ contract IntegrationTest is Addresses, BaseTest {
     uint256 internal constant LIQUIDATION_BONUS = 10_500;
     uint256 internal constant RESERVE_FACTOR = 2000;
 
+    // Aave operation params
+    address internal constant LP_TOKEN_HOLDER = 0x78e96Be52e38b3FC3445A2ED34a6e586fFAb9631;
+    address internal constant USER = 0x62780bac6b361C703148B7fdeCDE44987C5C69D0;
+    uint256 internal constant USER_LP_TOKEN_INITIAL_BALANCE = 100e18;
+    address internal constant DAI = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
+
     function setUp() public virtual override {
         // Fork
         vm.createSelectFork({ blockNumber: 21_643_099, urlOrAlias: "mainnet" });
@@ -62,6 +72,10 @@ contract IntegrationTest is Addresses, BaseTest {
         FEED_WETH = AggregatorV3Interface(_feed0);
         FEED_UNI = AggregatorV3Interface(_feed1);
 
+        // Balances
+        INITIAL_POOL_TOKEN0_BALANCE = IERC20(WETH).balanceOf(address(_pool));
+        INITIAL_POOL_TOKEN1_BALANCE = IERC20(UNI).balanceOf(address(_pool));
+
         // Deploy contracts to the fork.
         factory = new LPOracleFactory();
         lpOracle = LPOracle(factory.deployOracle(_pool, _feed0, _feed1));
@@ -71,6 +85,7 @@ contract IntegrationTest is Addresses, BaseTest {
         pool = IPool(provider.getPool());
         poolConfigurator = IPoolConfigurator(provider.getPoolConfigurator());
         aaveOracle = IAaveOracle(provider.getPriceOracle());
+        poolDataProvider = IPoolDataProvider(provider.getPoolDataProvider());
 
         // Start prank as pool admin
         vm.startPrank(admin);
@@ -85,9 +100,13 @@ contract IntegrationTest is Addresses, BaseTest {
         _setPriceFeed();
         vm.stopPrank();
 
+        // Transfer LP tokens from a LP token holder to the user for this test suite
+        vm.startPrank(LP_TOKEN_HOLDER);
+        POOL_WETH_UNI.transfer(USER, USER_LP_TOKEN_INITIAL_BALANCE);
+        vm.stopPrank();
+
         // Make a holder of the WETH-UNI pool tokens the default caller for this suite
         vm.startPrank(USER);
-
         // Approval
         POOL_WETH_UNI.approve(address(pool), type(uint256).max);
     }
@@ -153,5 +172,61 @@ contract IntegrationTest is Addresses, BaseTest {
         (, int256 answer,,,) = lpOracle.latestRoundData();
         uint256 price = aaveOracle.getAssetPrice(address(POOL_WETH_UNI));
         assertEq(uint256(answer), price);
+    }
+
+    function test_Supply_LPTokens() external {
+        uint256 amount = USER_LP_TOKEN_INITIAL_BALANCE;
+
+        // Supply tokens
+        pool.supply(address(POOL_WETH_UNI), amount, USER, 0);
+
+        // Assert user has aToken balance equal to amount supplied
+        (address aTokenAddress,,) = poolDataProvider.getReserveTokensAddresses(address(POOL_WETH_UNI));
+        assertEq(IERC20(aTokenAddress).balanceOf(USER), amount);
+
+        // Borrow 20_000 DAI
+        pool.borrow(DAI, 20_000e18, 2, 0, USER);
+
+        // Get user account data before manipulation
+        (
+            uint256 totalCollateralBaseBefore,
+            uint256 totalDebtBaseBefore,
+            uint256 availableBorrowsBaseBefore,
+            uint256 currentLiquidationThresholdBefore,
+            uint256 ltvBefore,
+            uint256 healthFactorBefore
+        ) = pool.getUserAccountData(USER);
+
+        // Pool manipulation: 90% token1 oiut
+        uint256 token1AmountOut = (9000 * INITIAL_POOL_TOKEN1_BALANCE) / 1e4; // 90% token 1 out
+        uint256 token0AmountIn = calcInGivenOutSignedWadMath(
+            INITIAL_POOL_TOKEN0_BALANCE, 0.5e18, INITIAL_POOL_TOKEN1_BALANCE, 0.5e18, token1AmountOut
+        );
+
+        // Mock the new balances
+        mock_token_balanceOf(WETH, address(POOL_WETH_UNI), INITIAL_POOL_TOKEN0_BALANCE + token0AmountIn);
+        mock_token_balanceOf(UNI, address(POOL_WETH_UNI), INITIAL_POOL_TOKEN1_BALANCE - token1AmountOut);
+
+        // Assert token balances were set
+        assertGt(IERC20(WETH).balanceOf(address(POOL_WETH_UNI)), INITIAL_POOL_TOKEN0_BALANCE);
+        assertLt(IERC20(UNI).balanceOf(address(POOL_WETH_UNI)), INITIAL_POOL_TOKEN1_BALANCE);
+
+        // Get user account data after manipulation
+        (
+            uint256 totalCollateralBase,
+            uint256 totalDebtBase,
+            uint256 availableBorrowsBase,
+            uint256 currentLiquidationThreshold,
+            uint256 ltv,
+            uint256 healthFactor
+        ) = pool.getUserAccountData(USER);
+
+        // Assertions
+        assertEq(totalCollateralBase, totalCollateralBaseBefore, "totalCollateralBase");
+        assertEq(totalDebtBase, totalDebtBaseBefore, "totalDebtBase");
+        assertEq(availableBorrowsBase, availableBorrowsBaseBefore, "availableBorrowsBase");
+        assertEq(currentLiquidationThreshold, currentLiquidationThresholdBefore, "currentLiquidationThreshold");
+        assertEq(ltv, ltvBefore, "ltv");
+        assertEq(healthFactor, healthFactorBefore, "healthFactor");
     }
 }
