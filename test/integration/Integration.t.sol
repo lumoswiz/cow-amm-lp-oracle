@@ -10,15 +10,16 @@ import { LPOracleFactory } from "src/LPOracleFactory.sol";
 import { IERC20 } from "cowprotocol/contracts/interfaces/IERC20.sol";
 import { AggregatorV3Interface } from "@cow-amm/interfaces/AggregatorV3Interface.sol";
 
-import { IPoolAddressesProvider } from "test/integration/aave-v3-contracts/interfaces/IPoolAddressesProvider.sol";
-import { IPool } from "test/integration/aave-v3-contracts/interfaces/IPool.sol";
-import { IPoolConfigurator } from "test/integration/aave-v3-contracts/interfaces/IPoolConfigurator.sol";
-import { IAaveOracle } from "test/integration/aave-v3-contracts/interfaces/IAaveOracle.sol";
+import { IPoolAddressesProvider } from "@aave-dao/aave-v3-origin/src/contracts/interfaces/IPoolAddressesProvider.sol";
+import { IPool } from "@aave-dao/aave-v3-origin/src/contracts/interfaces/IPool.sol";
+import { IPoolConfigurator } from "@aave-dao/aave-v3-origin/src/contracts/interfaces/IPoolConfigurator.sol";
+import { IAaveOracle } from "@aave-dao/aave-v3-origin/src/contracts/interfaces/IAaveOracle.sol";
 import { IDefaultInterestRateStrategyV2 } from
-    "test/integration/aave-v3-contracts/interfaces/IDefaultInterestRateStrategyV2.sol";
-import { IPoolDataProvider } from "test/integration/aave-v3-contracts/interfaces/IPoolDataProvider.sol";
+    "@aave-dao/aave-v3-origin/src/contracts/interfaces/IDefaultInterestRateStrategyV2.sol";
+import { IPoolDataProvider } from "@aave-dao/aave-v3-origin/src/contracts/interfaces/IPoolDataProvider.sol";
 
-import { ConfiguratorInputTypes } from "test/integration/aave-v3-contracts/types/ConfiguratorInputTypes.sol";
+import { ConfiguratorInputTypes } from
+    "@aave-dao/aave-v3-origin/src/contracts/protocol/libraries/types/ConfiguratorInputTypes.sol";
 
 contract IntegrationTest is Addresses, BaseTest {
     // LPOracle
