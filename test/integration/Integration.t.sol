@@ -208,10 +208,12 @@ contract IntegrationTest is Addresses, BaseTest {
             abi.encode(int256(naivePrice))
         );
 
-        // Supply overvalued tokens
+        // Supply overvalued tokens (inactive `referralCode` = 0)
         pool.supply(address(POOL_WETH_UNI), USER_LP_TOKEN_INITIAL_BALANCE, USER, 0);
 
         // Borrow against this collateral
+        // Aave V3.2: `interestRateMode` must equal 2
+        // inactive `referralCode` = 0
         pool.borrow(DAI, 147_000e18, 2, 0, USER);
 
         // Get user account data
@@ -263,10 +265,10 @@ contract IntegrationTest is Addresses, BaseTest {
         assertLt(IERC20(UNI).balanceOf(address(POOL_WETH_UNI)), INITIAL_POOL_TOKEN1_BALANCE);
 
         // Supply
-        pool.supply(address(POOL_WETH_UNI), USER_LP_TOKEN_INITIAL_BALANCE, USER, 0);
+        pool.supply(address(POOL_WETH_UNI), USER_LP_TOKEN_INITIAL_BALANCE, USER, 0); // inactive referralCode
 
         // Borrow against this collateral
-        pool.borrow(DAI, 29_000e18, 2, 0, USER);
+        pool.borrow(DAI, 29_000e18, 2, 0, USER); // interestRateMode = 2, inactive referralCode
 
         // Get user account data
         (uint256 totalCollateralBaseBefore, uint256 totalDebtBaseBefore,,,, uint256 healthFactorBefore) =
