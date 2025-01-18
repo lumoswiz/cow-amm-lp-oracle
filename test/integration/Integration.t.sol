@@ -175,15 +175,85 @@ contract IntegrationTest is Addresses, BaseTest {
         assertEq(uint256(answer), price);
     }
 
-    function test_DebtPosition_LPTokens_ManipulatePool_TooMuchToken0() external {
-        uint256 amount = USER_LP_TOKEN_INITIAL_BALANCE;
+    function test_NaivePrice_ManipulatePool_TooMuchToken0_BorrowAgainstInflatedLPTokens() external {
+        // Manipulate pool: 90% token1 out
+        uint256 token1AmountOut = (9000 * INITIAL_POOL_TOKEN1_BALANCE) / 1e4; // 90% token 1 out
+        uint256 token0AmountIn = calcInGivenOutSignedWadMath(
+            INITIAL_POOL_TOKEN0_BALANCE, 0.5e18, INITIAL_POOL_TOKEN1_BALANCE, 0.5e18, token1AmountOut
+        );
 
+        // Mock the new balances
+        mock_token_balanceOf(WETH, address(POOL_WETH_UNI), INITIAL_POOL_TOKEN0_BALANCE + token0AmountIn);
+        mock_token_balanceOf(UNI, address(POOL_WETH_UNI), INITIAL_POOL_TOKEN1_BALANCE - token1AmountOut);
+
+        // Assert token balances were set
+        assertGt(IERC20(WETH).balanceOf(address(POOL_WETH_UNI)), INITIAL_POOL_TOKEN0_BALANCE);
+        assertLt(IERC20(UNI).balanceOf(address(POOL_WETH_UNI)), INITIAL_POOL_TOKEN1_BALANCE);
+
+        // Get naive price for lp tokens & mock this price for the oracle repsonse
+        (, int256 answerWeth,,,) = FEED_WETH.latestRoundData();
+        (, int256 answerUni,,,) = FEED_UNI.latestRoundData();
+        uint256 naivePrice = calculateNaivePrice(
+            FEED_WETH.decimals(),
+            FEED_UNI.decimals(),
+            answerWeth,
+            answerUni,
+            INITIAL_POOL_TOKEN0_BALANCE + token0AmountIn,
+            INITIAL_POOL_TOKEN1_BALANCE - token1AmountOut,
+            POOL_WETH_UNI.totalSupply()
+        );
+        vm.mockCall(
+            address(aaveOracle),
+            abi.encodeWithSignature("getAssetPrice(address)", address(POOL_WETH_UNI)),
+            abi.encode(int256(naivePrice))
+        );
+
+        // Supply overvalued tokens
+        pool.supply(address(POOL_WETH_UNI), USER_LP_TOKEN_INITIAL_BALANCE, USER, 0);
+
+        // Borrow against this collateral
+        pool.borrow(DAI, 147_000e18, 2, 0, USER);
+
+        // Get user account data
+        (uint256 totalCollateralBaseBefore, uint256 totalDebtBase,,,, uint256 healthFactorBefore) =
+            pool.getUserAccountData(USER);
+
+        // Rebalancing trade occurs - pool back to initial, near balanced state
+        mock_token_balanceOf(WETH, address(POOL_WETH_UNI), INITIAL_POOL_TOKEN0_BALANCE);
+        mock_token_balanceOf(UNI, address(POOL_WETH_UNI), INITIAL_POOL_TOKEN1_BALANCE);
+
+        // Set new naive price after rebalancing
+        naivePrice = calculateNaivePrice(
+            FEED_WETH.decimals(),
+            FEED_UNI.decimals(),
+            answerWeth,
+            answerUni,
+            INITIAL_POOL_TOKEN0_BALANCE,
+            INITIAL_POOL_TOKEN1_BALANCE,
+            POOL_WETH_UNI.totalSupply()
+        );
+        vm.mockCall(
+            address(aaveOracle),
+            abi.encodeWithSignature("getAssetPrice(address)", address(POOL_WETH_UNI)),
+            abi.encode(int256(naivePrice))
+        );
+
+        // Get user account data
+        (uint256 totalCollateralBase,,,,, uint256 healthFactor) = pool.getUserAccountData(USER);
+
+        // Assertions
+        // Don't repay, gain: totalDebtBase - totalCollateralBase
+        // Approx. 103k in this scenario
+        assertGt(totalDebtBase, totalCollateralBase);
+    }
+
+    function test_LPOracle_DebtPosition_LPTokens_ManipulatePool_TooMuchToken0() external {
         // Supply tokens
-        pool.supply(address(POOL_WETH_UNI), amount, USER, 0);
+        pool.supply(address(POOL_WETH_UNI), USER_LP_TOKEN_INITIAL_BALANCE, USER, 0);
 
         // Assert user has aToken balance equal to amount supplied
         (address aTokenAddress,,) = poolDataProvider.getReserveTokensAddresses(address(POOL_WETH_UNI));
-        assertEq(IERC20(aTokenAddress).balanceOf(USER), amount);
+        assertEq(IERC20(aTokenAddress).balanceOf(USER), USER_LP_TOKEN_INITIAL_BALANCE);
 
         // Borrow 20_000 DAI
         pool.borrow(DAI, 20_000e18, 2, 0, USER);
