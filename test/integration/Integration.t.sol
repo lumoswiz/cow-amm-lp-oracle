@@ -174,7 +174,7 @@ contract IntegrationTest is Addresses, BaseTest {
         assertEq(uint256(answer), price);
     }
 
-    function test_Supply_LPTokens() external {
+    function test_DebtPosition_LPTokens_ManipulatePool_TooMuchToken0() external {
         uint256 amount = USER_LP_TOKEN_INITIAL_BALANCE;
 
         // Supply tokens
@@ -197,7 +197,7 @@ contract IntegrationTest is Addresses, BaseTest {
             uint256 healthFactorBefore
         ) = pool.getUserAccountData(USER);
 
-        // Pool manipulation: 90% token1 oiut
+        // Pool manipulation: 90% token1 out
         uint256 token1AmountOut = (9000 * INITIAL_POOL_TOKEN1_BALANCE) / 1e4; // 90% token 1 out
         uint256 token0AmountIn = calcInGivenOutSignedWadMath(
             INITIAL_POOL_TOKEN0_BALANCE, 0.5e18, INITIAL_POOL_TOKEN1_BALANCE, 0.5e18, token1AmountOut
