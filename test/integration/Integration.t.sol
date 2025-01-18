@@ -247,28 +247,8 @@ contract IntegrationTest is Addresses, BaseTest {
         assertGt(totalDebtBase, totalCollateralBase);
     }
 
-    function test_LPOracle_DebtPosition_LPTokens_ManipulatePool_TooMuchToken0() external {
-        // Supply tokens
-        pool.supply(address(POOL_WETH_UNI), USER_LP_TOKEN_INITIAL_BALANCE, USER, 0);
-
-        // Assert user has aToken balance equal to amount supplied
-        (address aTokenAddress,,) = poolDataProvider.getReserveTokensAddresses(address(POOL_WETH_UNI));
-        assertEq(IERC20(aTokenAddress).balanceOf(USER), USER_LP_TOKEN_INITIAL_BALANCE);
-
-        // Borrow 20_000 DAI
-        pool.borrow(DAI, 20_000e18, 2, 0, USER);
-
-        // Get user account data before manipulation
-        (
-            uint256 totalCollateralBaseBefore,
-            uint256 totalDebtBaseBefore,
-            uint256 availableBorrowsBaseBefore,
-            uint256 currentLiquidationThresholdBefore,
-            uint256 ltvBefore,
-            uint256 healthFactorBefore
-        ) = pool.getUserAccountData(USER);
-
-        // Pool manipulation: 90% token1 out
+    function test_LPOracle_ManipulatePool_TooMuchToken0_BorrowAgainstInflatedLPTokens() external {
+        // Manipulate pool: 90% token1 out
         uint256 token1AmountOut = (9000 * INITIAL_POOL_TOKEN1_BALANCE) / 1e4; // 90% token 1 out
         uint256 token0AmountIn = calcInGivenOutSignedWadMath(
             INITIAL_POOL_TOKEN0_BALANCE, 0.5e18, INITIAL_POOL_TOKEN1_BALANCE, 0.5e18, token1AmountOut
@@ -282,22 +262,27 @@ contract IntegrationTest is Addresses, BaseTest {
         assertGt(IERC20(WETH).balanceOf(address(POOL_WETH_UNI)), INITIAL_POOL_TOKEN0_BALANCE);
         assertLt(IERC20(UNI).balanceOf(address(POOL_WETH_UNI)), INITIAL_POOL_TOKEN1_BALANCE);
 
-        // Get user account data after manipulation
-        (
-            uint256 totalCollateralBase,
-            uint256 totalDebtBase,
-            uint256 availableBorrowsBase,
-            uint256 currentLiquidationThreshold,
-            uint256 ltv,
-            uint256 healthFactor
-        ) = pool.getUserAccountData(USER);
+        // Supply
+        pool.supply(address(POOL_WETH_UNI), USER_LP_TOKEN_INITIAL_BALANCE, USER, 0);
+
+        // Borrow against this collateral
+        pool.borrow(DAI, 29_000e18, 2, 0, USER);
+
+        // Get user account data
+        (uint256 totalCollateralBaseBefore, uint256 totalDebtBaseBefore,,,, uint256 healthFactorBefore) =
+            pool.getUserAccountData(USER);
+
+        // Rebalancing trade occurs - pool back to initial, near balanced state
+        mock_token_balanceOf(WETH, address(POOL_WETH_UNI), INITIAL_POOL_TOKEN0_BALANCE);
+        mock_token_balanceOf(UNI, address(POOL_WETH_UNI), INITIAL_POOL_TOKEN1_BALANCE);
+
+        // Get user account data after rebalancing trade
+        (uint256 totalCollateralBase, uint256 totalDebtBase,,,, uint256 healthFactor) = pool.getUserAccountData(USER);
 
         // Assertions
+        // Collateral base, debt base and health factors should be the same
         assertEq(totalCollateralBase, totalCollateralBaseBefore, "totalCollateralBase");
         assertEq(totalDebtBase, totalDebtBaseBefore, "totalDebtBase");
-        assertEq(availableBorrowsBase, availableBorrowsBaseBefore, "availableBorrowsBase");
-        assertEq(currentLiquidationThreshold, currentLiquidationThresholdBefore, "currentLiquidationThreshold");
-        assertEq(ltv, ltvBefore, "ltv");
         assertEq(healthFactor, healthFactorBefore, "healthFactor");
     }
 }
