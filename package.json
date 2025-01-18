@@ -7,6 +7,7 @@
     "url": "https://github.com/lumoswiz"
   },
   "dependencies": {
+    "@aave-dao/aave-v3-origin": "github:aave-dao/aave-v3-origin#1dab6e5",
     "@balancer/cow-amm": "lumoswiz/cow-amm#main",
     "solmate": "github:transmissions11/solmate#c892309"
   },
