@@ -5,3 +5,4 @@ cowprotocol/=node_modules/@cowprotocol/contracts/src/
 @balancer/cow-amm/=node_modules/@balancer/cow-amm/
 @cow-amm/=node_modules/cow-amm/src
 cow-amm/=node_modules/cow-amm/src/
+@aave-dao/aave-v3-origin/src/contracts/=node_modules/@aave-dao/aave-v3-origin/src/contracts/
