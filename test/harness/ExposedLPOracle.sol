@@ -2,7 +2,6 @@
 pragma solidity 0.8.25;
 
 import { LPOracle } from "src/LPOracle.sol";
-import { GPv2Order } from "cowprotocol/contracts/libraries/GPv2Order.sol";
 
 contract ExposedLPOracle is LPOracle {
     constructor(address _pool, address _feed0, address _feed1) LPOracle(_pool, _feed0, _feed1) { }

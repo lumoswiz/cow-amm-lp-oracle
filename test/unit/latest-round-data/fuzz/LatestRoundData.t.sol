@@ -2,10 +2,6 @@
 pragma solidity 0.8.25;
 
 import { BaseTest } from "test/Base.t.sol";
-import { FeedParams } from "test/utils/Types.sol";
-import { IERC20 } from "cowprotocol/contracts/interfaces/IERC20.sol";
-import { stdError } from "forge-std/StdError.sol";
-import { stdMath } from "forge-std/StdMath.sol";
 
 contract LatestRoundData_Fuzz_Unit_Test is BaseTest {
     modifier givenWhenDecimalsLtEq18() {

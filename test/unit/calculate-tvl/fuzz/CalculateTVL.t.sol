@@ -2,7 +2,6 @@
 pragma solidity 0.8.25;
 
 import { BaseTest } from "test/Base.t.sol";
-import { stdError } from "forge-std/StdError.sol";
 import { wadMul, wadDiv, wadPow } from "solmate/utils/SignedWadMath.sol";
 
 contract CalculateTVL_Fuzz_Unit_Test is BaseTest {

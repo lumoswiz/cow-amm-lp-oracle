@@ -7,7 +7,6 @@ import { Addresses } from "test/utils/Addresses.sol";
 import { LPOracle } from "src/LPOracle.sol";
 import { LPOracleFactory } from "src/LPOracleFactory.sol";
 
-import { ICOWAMMPoolHelper } from "@cow-amm/interfaces/ICOWAMMPoolHelper.sol";
 import { AggregatorV3Interface } from "@cow-amm/interfaces/AggregatorV3Interface.sol";
 import { IERC20 } from "cowprotocol/contracts/interfaces/IERC20.sol";
 

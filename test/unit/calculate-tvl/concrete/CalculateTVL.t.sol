@@ -121,7 +121,7 @@ contract CalculateTVL_Concrete_Unit_Test is BaseTest {
 
         // tvl
         vm.expectRevert();
-        uint256 tvl = uint256(wadMul(wadMul(wadMul(k, pxComponent), pyComponent), weightFactor));
+        uint256(wadMul(wadMul(wadMul(k, pxComponent), pyComponent), weightFactor));
     }
 
     function test_TVL_MaxKValue_VeryHighAnswersAndHighFeedDecimals()

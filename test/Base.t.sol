@@ -6,7 +6,7 @@ import { ExposedLPOracle } from "test/harness/ExposedLPOracle.sol";
 import { Assertions } from "test/utils/Assertions.sol";
 import { Calculations } from "test/utils/Calculations.sol";
 import { Defaults } from "test/utils/Defaults.sol";
-import { Mocks, OrderParams, TokenParams, FeedParams } from "test/utils/Types.sol";
+import { Mocks, FeedParams } from "test/utils/Types.sol";
 import { Utils } from "test/utils/Utils.sol";
 
 contract BaseTest is Assertions, Calculations, Utils {

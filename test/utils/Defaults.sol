@@ -2,7 +2,7 @@
 pragma solidity >=0.8.25 < 0.9.0;
 
 import { Constants } from "test/utils/Constants.sol";
-import { Mocks, OrderParams, TokenParams, FeedParams } from "test/utils/Types.sol";
+import { Mocks, FeedParams } from "test/utils/Types.sol";
 
 contract Defaults is Constants {
     uint256 public constant TOKEN0_BALANCE = 1e18;

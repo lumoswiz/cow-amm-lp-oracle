@@ -39,7 +39,7 @@ contract IntegrationTest is Addresses, BaseTest {
     IPool internal pool;
     IPoolConfigurator internal poolConfigurator;
     IAaveOracle internal aaveOracle;
-    IPoolDataProvider poolDataProvider;
+    IPoolDataProvider internal poolDataProvider;
 
     // Pool admin
     address internal constant admin = 0x5300A1a15135EA4dc7aD5a167152C01EFc9b192A;
