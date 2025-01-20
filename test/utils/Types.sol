@@ -10,20 +10,6 @@ struct Mocks {
     address feed1;
 }
 
-struct TokenParams {
-    address addr;
-    uint256 balance;
-    uint256 normWeight;
-    uint256 denormWeight;
-}
-
-struct OrderParams {
-    address pool;
-    address factory;
-    TokenParams token0;
-    TokenParams token1;
-}
-
 struct FeedParams {
     address addr;
     uint8 decimals;
