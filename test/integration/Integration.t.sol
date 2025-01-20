@@ -287,4 +287,43 @@ contract IntegrationTest is Addresses, BaseTest {
         assertEq(totalDebtBase, totalDebtBaseBefore, "totalDebtBase");
         assertEq(healthFactor, healthFactorBefore, "healthFactor");
     }
+
+        function test_LPOracle_ManipulatePool_TooMuchToken1_BorrowAgainstInflatedLPTokens() external {
+        // Manipulate pool: 90% token1 out
+        uint256 token0AmountOut = (9000 * INITIAL_POOL_TOKEN0_BALANCE) / 1e4; // 90% token 1 out
+        uint256 token1AmountIn = calcInGivenOutSignedWadMath(
+            INITIAL_POOL_TOKEN1_BALANCE, 0.5e18, INITIAL_POOL_TOKEN0_BALANCE, 0.5e18, token0AmountOut
+        );
+
+        // Mock the new balances
+        mock_token_balanceOf(WETH, address(POOL_WETH_UNI), INITIAL_POOL_TOKEN0_BALANCE - token0AmountOut);
+        mock_token_balanceOf(UNI, address(POOL_WETH_UNI), INITIAL_POOL_TOKEN1_BALANCE + token1AmountIn);
+
+        // Assert token balances were set
+        assertLt(IERC20(WETH).balanceOf(address(POOL_WETH_UNI)), INITIAL_POOL_TOKEN0_BALANCE);
+        assertGt(IERC20(UNI).balanceOf(address(POOL_WETH_UNI)), INITIAL_POOL_TOKEN1_BALANCE);
+
+        // Supply
+        pool.supply(address(POOL_WETH_UNI), USER_LP_TOKEN_INITIAL_BALANCE, USER, 0); // inactive referralCode
+
+        // Borrow against this collateral
+        pool.borrow(DAI, 29_000e18, 2, 0, USER); // interestRateMode = 2, inactive referralCode
+
+        // Get user account data
+        (uint256 totalCollateralBaseBefore, uint256 totalDebtBaseBefore,,,, uint256 healthFactorBefore) =
+            pool.getUserAccountData(USER);
+
+        // Rebalancing trade occurs - pool back to initial, near balanced state
+        mock_token_balanceOf(WETH, address(POOL_WETH_UNI), INITIAL_POOL_TOKEN0_BALANCE);
+        mock_token_balanceOf(UNI, address(POOL_WETH_UNI), INITIAL_POOL_TOKEN1_BALANCE);
+
+        // Get user account data after rebalancing trade
+        (uint256 totalCollateralBase, uint256 totalDebtBase,,,, uint256 healthFactor) = pool.getUserAccountData(USER);
+
+        // Assertions
+        // Collateral base, debt base and health factors should be the same
+        assertEq(totalCollateralBase, totalCollateralBaseBefore, "totalCollateralBase");
+        assertEq(totalDebtBase, totalDebtBaseBefore, "totalDebtBase");
+        assertEq(healthFactor, healthFactorBefore, "healthFactor");
+    }
 }
