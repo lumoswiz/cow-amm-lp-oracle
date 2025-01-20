@@ -2,7 +2,6 @@
 pragma solidity >=0.8.25 < 0.9.0;
 
 import { Test } from "forge-std/Test.sol";
-import { OrderParams } from "test/utils/Types.sol";
 import { IERC20 } from "cowprotocol/contracts/interfaces/IERC20.sol";
 
 contract Utils is Test {
