@@ -288,7 +288,7 @@ contract IntegrationTest is Addresses, BaseTest {
         assertEq(healthFactor, healthFactorBefore, "healthFactor");
     }
 
-        function test_LPOracle_ManipulatePool_TooMuchToken1_BorrowAgainstInflatedLPTokens() external {
+    function test_LPOracle_ManipulatePool_TooMuchToken1_BorrowAgainstInflatedLPTokens() external {
         // Manipulate pool: 90% token1 out
         uint256 token0AmountOut = (9000 * INITIAL_POOL_TOKEN0_BALANCE) / 1e4; // 90% token 1 out
         uint256 token1AmountIn = calcInGivenOutSignedWadMath(
