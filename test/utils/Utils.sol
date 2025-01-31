@@ -76,4 +76,9 @@ contract Utils is Test {
     function mock_pool_totalSupply(address pool, uint256 supply) internal {
         vm.mockCall(pool, abi.encodeWithSignature("totalSupply()"), abi.encode(supply));
     }
+
+    /// @dev Helper to mock the name of the pool
+    function mock_pool_name(address pool, string memory name) internal {
+        vm.mockCall(pool, abi.encodeWithSignature("name()"), abi.encode(name));
+    }
 }

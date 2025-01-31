@@ -5,6 +5,7 @@ import { Constants } from "test/utils/Constants.sol";
 import { Mocks, FeedParams } from "test/utils/Types.sol";
 
 contract Defaults is Constants {
+    string public constant POOL_NAME = "BCoW AMM 50WETH-50GNO";
     uint256 public constant TOKEN0_BALANCE = 1e18;
     uint256 public constant TOKEN1_BALANCE = 3000e18;
     uint256 public constant NORMALIZED_WEIGHT = 0.5e18;
