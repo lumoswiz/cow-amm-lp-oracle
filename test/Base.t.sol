@@ -31,6 +31,9 @@ contract BaseTest is Assertions, Calculations, Utils {
         // Set defaults for LPOracle constructor args
         setOracleConstructorMockCalls(8, 8, 18, 18, defaults.WEIGHT_50());
 
+        // Set mocked name for the BCoWPool
+        mock_pool_name(mocks.pool, defaults.POOL_NAME());
+
         // Initialize oracle with default configuration
         oracle = new ExposedLPOracle(mocks.pool, mocks.feed0, mocks.feed1);
         vm.label(address(oracle), "ExposedLPOracle");

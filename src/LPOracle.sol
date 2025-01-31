@@ -39,6 +39,9 @@ contract LPOracle is AggregatorV3Interface {
     /// @notice Chainlink USD price for pool token 1
     AggregatorV3Interface public immutable FEED1;
 
+    /// @notice Description of this LP token oracle
+    string public description;
+
     /// @notice Must check Chainlink price feeds match pool token ordering.
     /// @param _pool BCoWPool address.
     /// @param _feed0 Chainlink USD price feed for pool token at index 0.
@@ -51,6 +54,9 @@ contract LPOracle is AggregatorV3Interface {
 
         /* Set pool contract */
         POOL = _pool;
+
+        /* Set oracle description */
+        description = string.concat(IERC20(_pool).name(), " LP Token / USD");
 
         /* Gets pool tokens with correct ordering and pool validation checks */
         address[] memory tokens = IBCoWPool(POOL).getFinalTokens();
@@ -74,11 +80,6 @@ contract LPOracle is AggregatorV3Interface {
     function decimals() external view returns (uint8) {
         uint8 feed0Decimals = FEED0.decimals();
         return feed0Decimals == FEED1.decimals() ? feed0Decimals : 18;
-    }
-
-    /// @notice Returns the description of the LP token pricing oracle.
-    function description() external view returns (string memory) {
-        return string.concat(IERC20(POOL).name(), " LP Token / USD");
     }
 
     /// @notice Returns the oracle version.
