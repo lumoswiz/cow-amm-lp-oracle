@@ -2,11 +2,10 @@
 pragma solidity 0.8.25;
 
 import { LPOracle } from "./LPOracle.sol";
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 /// @title LPOracle Factory
 /// @notice Factory contract for deploying LPOracle instances with deterministic addresses
-contract LPOracleFactory is Ownable {
+contract LPOracleFactory {
     error OracleAlreadyExists();
     error DeployFailed();
 
@@ -19,9 +18,7 @@ contract LPOracleFactory is Ownable {
     /// @notice Emitted when a new oracle is deployed
     event OracleDeployed(address indexed pool, address indexed oracle);
 
-    constructor() Ownable(msg.sender) { }
-
-    /// @notice Computes the deterministic address for an oracle before it is deployed
+    /// @notice Computes the deterministic address for an oracle
     /// @param pool BCoWPool address
     /// @param feed0 Chainlink USD price feed for pool token at index 0
     /// @param feed1 Chainlink USD price feed for pool token at index 1
