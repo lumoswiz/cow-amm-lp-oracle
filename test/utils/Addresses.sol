@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity >=0.8.25 < 0.9.0;
 
-/// @dev Helper contract to obtain price feeds and pools for eth mainnet contracts
+/// @title Ethereum Mainnet Addresses for CoW Protocol AMM Testing
+/// @dev Helper contract containing Ethereum mainnet addresses for:
+/// - BCoWPool (Balancer-style CoW AMM) deployed contracts
+/// - Chainlink USD price feed oracles
+/// Used for fork testing oracle deployments with real mainnet contracts
 contract Addresses {
     /// @dev Token ids for retrieving deployed price feed and pool addresses.
     address public constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
