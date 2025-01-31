@@ -7,7 +7,10 @@
     "url": "https://github.com/lumoswiz"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^5.0.1"
+    "@aave-dao/aave-v3-origin": "github:aave-dao/aave-v3-origin#1dab6e5",
+    "@balancer/cow-amm": "lumoswiz/cow-amm#main",
+    "@chainlink/contracts": "^1.3.0",
+    "solmate": "github:transmissions11/solmate#c892309"
   },
   "devDependencies": {
     "forge-std": "github:foundry-rs/forge-std#v1.8.1",

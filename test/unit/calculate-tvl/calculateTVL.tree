@@ -1,0 +1,23 @@
+CalculateTVL.t.sol
+├── when the token decimals for a pool token is greater than 18
+│   └── it should revert
+└── when the token decimals for a pool token is less than, or equal to 18
+    ├── when the pool balance of token 0 is greater than the maximum 256 bit signed integer divided by WAD
+    │   └── it should revert
+    └── when the pool balance of token 0 is less than, or equal to, the maximum 256 bit signed integer divided by WAD
+        ├── when the pool balance of token 1 is less than, or equal to, zero
+        │   └── it should revert
+        └── when the pool balance of token 1 is positive
+            ├── when the pool balance of token 1 is greater than the pool balance of token 0 multiplied by WAD
+            │   └── it should revert
+            └── when the pool balance of token 1 is less than, or equal to, the pool balance of token 0 multiplied by WAD
+                ├── when the wadMul operation in the pool invariant k calculation overflows
+                │   └── it should revert
+                └── when the wadMul operation in the pool invariant k calculation does not overflow
+                    ├── when at least one answer returned from the price feed is less than, or equal to, zero
+                    │   └── it should revert
+                    └── when both answers returned from the price feeds is greater than zero
+                        ├── when at least one wadMul operation in the TVL calculation overflows
+                        │   └── it should revert
+                        └── when no wadMul operation overflows in the TVL calculation
+                            └── it should return the pool TVL with the same decimal basis as the input answers

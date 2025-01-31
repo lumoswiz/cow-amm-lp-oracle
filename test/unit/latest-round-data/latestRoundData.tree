@@ -1,0 +1,19 @@
+LatestRoundData.t.sol
+├── given when at least one feed address has a decimal value greater than 18
+│   └── it should revert
+└── given when both feed addresses have decimal values less than, or equal to, 18
+    ├── when the pool balance of token 1 is greater than the pool balance of token 0 multiplied by WAD
+    │   └── it should revert
+    └── when the pool balance of token 1 is less than, or equal to, the pool balance of token 0 multiplied by WAD
+        ├── when at least one answer returned from the price feeds is less than, or equal to, zero
+        │   └── it should revert
+        └── when both answers returned from price feeds are positive
+            ├── when the total supply of pool lp tokens is zero
+            │   └── it should revert
+            └── when the total supply of pool LP tokens is positive
+                ├── it should return zero for the unimplemented return variables of: roundId, startedAt and answeredInRound
+                ├── it should return the update timestamp of the oldest price feed
+                ├── when the price feed decimals are the same
+                │   └── it should return the LP token price with the same decimal basis as the underlying price feeds
+                └── when the price feed decimals are different
+                    └── it should return the LP token price with a decimal basis of 18
