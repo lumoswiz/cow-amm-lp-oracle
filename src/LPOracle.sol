@@ -39,7 +39,7 @@ contract LPOracle is AggregatorV3Interface {
     /// @notice Chainlink USD price for pool token 1
     AggregatorV3Interface public immutable FEED1;
 
-    /// @dev Must check Chainlink price feeds match pool token ordering.
+    /// @notice Must check Chainlink price feeds match pool token ordering.
     /// @param _pool BCoWPool address.
     /// @param _feed0 Chainlink USD price feed for pool token at index 0.
     /// @param _feed1 Chainlink USD price feed for pool token at index 1.
