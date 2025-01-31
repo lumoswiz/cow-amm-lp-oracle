@@ -6,3 +6,4 @@ cowprotocol/=node_modules/@cowprotocol/contracts/src/
 @cow-amm/=node_modules/cow-amm/src
 cow-amm/=node_modules/cow-amm/src/
 @aave-dao/aave-v3-origin/src/contracts/=node_modules/@aave-dao/aave-v3-origin/src/contracts/
+@chainlink/=node_modules/@chainlink/contracts/
