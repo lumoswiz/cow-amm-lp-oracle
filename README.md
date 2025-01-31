@@ -19,6 +19,20 @@ $ cd cow-amm-lp-oracle
 $ bun install
 ```
 
+### Contract Deployment and Verification
+
+The repository includes pre-configured RPC endpoints for various networks. When deploying contracts using
+`forge script`, you can:
+
+1. Specify the network: `--rpc-url <network>` (e.g., `--rpc-url mainnet`)
+2. Set your block explorer API key: `export ETHERSCAN_API_KEY=your_api_key`
+3. Use the `--verify` flag for contract verification
+
+Supported networks: mainnet, sepolia, gnosis, arbitrum, base, and localhost.
+
+For detailed information about contract deployment and verification, see the
+[Foundry Book](https://book.getfoundry.sh/reference/forge/forge-script).
+
 ### VSCode Integration
 
 It is recommended to use VSCode with the Nomic Foundation's
