@@ -10,7 +10,10 @@ contract CalculateTVL_Concrete_Unit_Test is BaseTest {
     /*   # POOL INVARIANT K CALCULATION                             */
     /* ------------------------------------------------------------ */
 
-    // int256 k = wadMul(wadPow(wadDiv(balance0, balance1), WEIGHT0), balance1);
+    /* Reference: 
+    * Extracted from `LPOracle._calculateTVL` for targeted testing: 
+    * Line 164: k = wadMul(wadPow(wadDiv(balance0, balance1), WEIGHT0), balance1)
+    */
 
     function test_ShouldRevert_InvariantK_Balance0TooLarge() external {
         int256 balance0 = (type(int256).max / 1e18) + 1;
@@ -69,9 +72,12 @@ contract CalculateTVL_Concrete_Unit_Test is BaseTest {
     /*   # CALCULATE POOL TVL                                       */
     /* ------------------------------------------------------------ */
 
-    // int256 pxComponent = wadPow(answer0, WEIGHT0);
-    // int256 pyComponent = wadPow(answer1, WEIGHT1);
-    // uint256 tvl = uint256(wadMul(wadMul(wadMul(k, pxComponent), pyComponent), weightFactor));
+    /* Reference: 
+    * Extracted from `LPOracle._calculateTVL` for targeted testing:
+    * Line 170: pxComponent = wadPow(answer0, WEIGHT0)
+    * Line 171: pyComponent = wadPow(answer1, WEIGHT1)
+    * Line 171: tvl = wadMul(wadMul(wadMul(k, pxComponent), pyComponent), weightFactor)
+    */
 
     function test_ShouldRevert_TVL_AnswerZero() external {
         vm.expectRevert("UNDEFINED");
