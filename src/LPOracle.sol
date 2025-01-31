@@ -10,6 +10,9 @@ contract LPOracle is AggregatorV3Interface {
     /// @notice Thrown when Chainlink price feeds with more than 18 decimals are used.
     error UnsupportedDecimals();
 
+    /// @notice Oracle version
+    uint256 internal constant ORACLE_VERSION = 0;
+
     /// @notice BCoWPool address.
     address public immutable POOL;
 
@@ -85,7 +88,7 @@ contract LPOracle is AggregatorV3Interface {
     /// @notice Returns the oracle version.
     /// @dev Chainlink interface requires implementation.
     function version() external pure returns (uint256) {
-        return 0;
+        return ORACLE_VERSION;
     }
 
     /// @dev Chainlink interface requires implementation. No meaningful values for this contract.
