@@ -8,7 +8,7 @@ import { AaveLPOracle } from "test/integration/AaveLPOracle.sol";
 import { LPOracle } from "src/LPOracle.sol";
 import { LPOracleFactory } from "src/LPOracleFactory.sol";
 import { IERC20 } from "cowprotocol/contracts/interfaces/IERC20.sol";
-import { AggregatorV3Interface } from "@cow-amm/interfaces/AggregatorV3Interface.sol";
+import { AggregatorV3Interface } from "@chainlink/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 
 import { IPoolAddressesProvider } from "@aave-dao/aave-v3-origin/src/contracts/interfaces/IPoolAddressesProvider.sol";
 import { IPool } from "@aave-dao/aave-v3-origin/src/contracts/interfaces/IPool.sol";

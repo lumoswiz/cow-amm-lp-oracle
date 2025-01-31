@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.25;
 
-import { AggregatorV3Interface } from "@cow-amm/interfaces/AggregatorV3Interface.sol";
+import { AggregatorV3Interface } from "@chainlink/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 import { IERC20 } from "cowprotocol/contracts/interfaces/IERC20.sol";
 import { IBCoWPool } from "@balancer/cow-amm/src/interfaces/IBCoWPool.sol";
 import { wadMul, wadDiv, wadPow } from "solmate/utils/SignedWadMath.sol";

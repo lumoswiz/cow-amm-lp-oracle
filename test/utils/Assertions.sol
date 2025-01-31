@@ -3,7 +3,7 @@ pragma solidity >=0.8.25 < 0.9.0;
 
 import { StdAssertions } from "forge-std/Test.sol";
 import { ICOWAMMPoolHelper } from "@cow-amm/interfaces/ICOWAMMPoolHelper.sol";
-import { AggregatorV3Interface } from "@cow-amm/interfaces/AggregatorV3Interface.sol";
+import { AggregatorV3Interface } from "@chainlink/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 import { IERC20 } from "cowprotocol/contracts/interfaces/IERC20.sol";
 
 contract Assertions is StdAssertions {
