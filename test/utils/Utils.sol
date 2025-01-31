@@ -3,6 +3,9 @@ pragma solidity >=0.8.25 < 0.9.0;
 
 import { Test } from "forge-std/Test.sol";
 import { IERC20 } from "cowprotocol/contracts/interfaces/IERC20.sol";
+import { AggregatorV3Interface } from "@chainlink/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
+import { IBCoWPool } from "@balancer/cow-amm//src/interfaces/IBCoWPool.sol";
+import { IBPool } from "@balancer/cow-amm//src/interfaces/IBPool.sol";
 
 contract Utils is Test {
     /*----------------------------------------------------------*|
@@ -20,7 +23,7 @@ contract Utils is Test {
 
     /// @dev Helper to mock a `decimals()` call to an arbitrary address.
     function mock_address_decimals(address addr, uint8 decimals) internal {
-        vm.mockCall(addr, abi.encodeWithSignature("decimals()"), abi.encode(decimals));
+        vm.mockCall(addr, abi.encodeCall(IERC20(addr).decimals, ()), abi.encode(decimals));
     }
 
     /*----------------------------------------------------------*|
@@ -28,7 +31,11 @@ contract Utils is Test {
     |*----------------------------------------------------------*/
 
     function mock_feed_latestRoundData(address feed, int256 answer, uint256 updatedAt) internal {
-        vm.mockCall(feed, abi.encodeWithSignature("latestRoundData()"), abi.encode(0, answer, 0, updatedAt, 0));
+        vm.mockCall(
+            feed,
+            abi.encodeCall(AggregatorV3Interface(feed).latestRoundData, ()),
+            abi.encode(0, answer, 0, updatedAt, 0)
+        );
     }
 
     /*----------------------------------------------------------*|
@@ -37,11 +44,11 @@ contract Utils is Test {
 
     /// @dev Helper to mock token pool balances.
     function mock_token_balanceOf(address token, address pool, uint256 balance) internal {
-        vm.mockCall(token, abi.encodeWithSignature("balanceOf(address)", pool), abi.encode(balance));
+        vm.mockCall(token, abi.encodeCall(IERC20(token).balanceOf, (pool)), abi.encode(balance));
     }
 
     function mock_token_balanceOf(IERC20 token, IERC20 pool, uint256 balance) internal {
-        vm.mockCall(address(token), abi.encodeWithSignature("balanceOf(address)", address(pool)), abi.encode(balance));
+        vm.mockCall(address(token), abi.encodeCall(token.balanceOf, (address(pool))), abi.encode(balance));
     }
 
     /*----------------------------------------------------------*|
@@ -50,12 +57,12 @@ contract Utils is Test {
 
     /// @dev Helper to mock the normalized weight of a pool token.
     function mock_pool_getNormalizedWeight(address pool, address token, uint256 normWeight) internal {
-        vm.mockCall(pool, abi.encodeWithSignature("getNormalizedWeight(address)", token), abi.encode(normWeight));
+        vm.mockCall(pool, abi.encodeCall(IBCoWPool(pool).getNormalizedWeight, (token)), abi.encode(normWeight));
     }
 
     /// @dev Helper to mock the denormalized weight of a pool token.
     function mock_pool_getDenormalizedWeight(address pool, address token, uint256 denormWeight) internal {
-        vm.mockCall(pool, abi.encodeWithSignature("getDenormalizedWeight(address)", token), abi.encode(denormWeight));
+        vm.mockCall(pool, abi.encodeCall(IBCoWPool(pool).getDenormalizedWeight, (token)), abi.encode(denormWeight));
     }
 
     /// @dev Helper to mock the `pool.getFinalTokens` call.
@@ -64,7 +71,7 @@ contract Utils is Test {
         tokens[0] = token0;
         tokens[1] = token1;
 
-        vm.mockCall(pool, abi.encodeWithSignature("getFinalTokens()"), abi.encode(tokens));
+        vm.mockCall(pool, abi.encodeCall(IBPool.getFinalTokens, ()), abi.encode(tokens));
     }
 
     /// @dev Helper to set the pool state as finalized, required for LPOracle._simulateOrder calls.
@@ -74,11 +81,11 @@ contract Utils is Test {
 
     /// @dev Helper to mock total supply of pool LP tokens
     function mock_pool_totalSupply(address pool, uint256 supply) internal {
-        vm.mockCall(pool, abi.encodeWithSignature("totalSupply()"), abi.encode(supply));
+        vm.mockCall(pool, abi.encodeCall(IERC20(pool).totalSupply, ()), abi.encode(supply));
     }
 
     /// @dev Helper to mock the name of the pool
     function mock_pool_name(address pool, string memory name) internal {
-        vm.mockCall(pool, abi.encodeWithSignature("name()"), abi.encode(name));
+        vm.mockCall(pool, abi.encodeCall(IERC20(pool).name, ()), abi.encode(name));
     }
 }
