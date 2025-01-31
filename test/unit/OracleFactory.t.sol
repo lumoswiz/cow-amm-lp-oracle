@@ -81,16 +81,6 @@ contract OracleFactoryBenchmark is BaseTest {
         assertEq(address(oracle.FEED0()), mocks.feed0, "Wrong feed0 address");
         assertEq(address(oracle.FEED1()), mocks.feed1, "Wrong feed1 address");
 
-        // TODO(bh2smith): We would need to add some additional mocking to test this functionality.
-        // // Verify oracle can be called (this will revert if oracle is not properly initialized)
-        // try oracle.latestRoundData() returns (uint80, int256, uint256, uint256, uint80) {
-        //     // Price retrieval successful
-        // } catch Error(string memory reason) {
-        //     assertFalse(true, string.concat("Oracle latestRoundData() failed: ", reason));
-        // } catch {
-        //     assertFalse(true, "Oracle latestRoundData() failed with unknown error");
-        // }
-
         // Verify oracle is registered in factory
         assertEq(factory.getOracle(mocks.pool), oracleAddr, "Oracle not registered in factory");
         console.log("Oracle address:", oracleAddr);
